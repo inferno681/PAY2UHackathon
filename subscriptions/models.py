@@ -5,7 +5,7 @@ from django.db import models
 LENGTH_LIMITS_CHAR_FIELDS = 150
 
 
-class User(AbstractUser):
+class User(models.Model):
     """Модель пользователя."""
 
     USERNAME_FIELD = 'email'
@@ -38,15 +38,16 @@ class User(AbstractUser):
 
 
 class Subscription(models.Model):
+    """Модель подписок"""
     name = models.CharField(
         'Название', max_length=LENGTH_LIMITS_CHAR_FIELDS)
     description = models.TextField('Описание')
     monthly_price = models.DecimalField(
-        'Цена подписки за месяц', decimal_places=2)
+        'Цена подписки за месяц', max_digits=3, decimal_places=2)
     semi_annual_price = models.DecimalField(
-        'Цена подписки за полгода', decimal_places=2)
+        'Цена подписки за полгода', max_digits=3, decimal_places=2)
     annual_price = models.DecimalField(
-        'Цена подписки за год', decimal_places=2)
+        'Цена подписки за год', max_digits=3, decimal_places=2)
     users = models.ManyToManyField(
         User,
         through='UserSubscription',
@@ -60,6 +61,7 @@ class Subscription(models.Model):
 
 
 class UserSubscription(models.Model):
+    """Модель связи M2M"""
     user = models.ForeignKey(
         User,
         related_name='usersubscriptions',
