@@ -39,7 +39,7 @@ class User(AbstractUser):
 
 class Subscription(models.Model):
     name = models.CharField(
-        'Название', max_lemax_length=LENGTH_LIMITS_CHAR_FIELDS)
+        'Название', max_length=LENGTH_LIMITS_CHAR_FIELDS)
     description = models.TextField('Описание')
     monthly_price = models.FloatField(
         'Цена подписки за месяц', decimal_places=2)
