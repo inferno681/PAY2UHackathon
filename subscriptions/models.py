@@ -5,13 +5,11 @@ from django.db import models
 LENGTH_LIMITS_CHAR_FIELDS = 150
 
 
-class User(models.Model):
+class User(AbstractUser):
     """Модель пользователя."""
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [
-        'username',
-    ]
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = []
     phone_number = models.IntegerField(
         'Номер телефона',
         unique=True,
