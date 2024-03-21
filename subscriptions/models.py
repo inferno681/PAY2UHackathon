@@ -7,13 +7,23 @@ LENGTH_LIMITS_PRICE_FIELDS = 5
 LENGTH_LIMIT_ACCOUNT_FIELD = 10
 DECIMAL_PLACES = 2
 
+MONTH = 'monthly'
+SEMI_ANNUAL = 'semi-annual'
+ANNUAL = 'annual'
+
+SUBSCRIPTION_PERIOD = (
+    (MONTH, 'Месяц'),
+    (SEMI_ANNUAL, 'Полгода'),
+    (ANNUAL, 'Год')
+)
+
 
 class User(AbstractUser):
     """Модель пользователя."""
 
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
-    phone_number = models.IntegerField(
+    phone_number = models.CharField(
         'Номер телефона',
         unique=True,
         blank=False,
@@ -110,6 +120,12 @@ class UserSubscription(models.Model):
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
         decimal_places=DECIMAL_PLACES
     )
+    period = models.CharField(
+        'Продолжительность подписки',
+        max_length=max(len(period) for period, _ in SUBSCRIPTION_PERIOD),
+        default=MONTH,
+        choices=SUBSCRIPTION_PERIOD
+    )
 
     class Meta:
         ordering = ('user',)
@@ -119,3 +135,15 @@ class UserSubscription(models.Model):
             fields=['user', 'subscription'],
             name='unique_user_subscription'
         )]
+
+    class Card(models.Model):
+        user = models.ForeignKey(
+            User,
+            related_name='cards',
+            on_delete=models.CASCADE,
+            verbose_name='Пользователь'
+        )
+        card_number = models.CharField(
+            'Номер карты',
+            max_length=19
+        )
