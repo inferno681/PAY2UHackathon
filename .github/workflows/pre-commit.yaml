@@ -24,4 +24,4 @@ jobs:
       run: pip install pre-commit
 
     - name: Run pre-commit
-      run: pre-commit run --files ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} -c .github/workflows/.pre-commit-pr.yaml
+      run: pre-commit run --files ${{ join(steps.changed-files.outputs.all_changed_files, ' ') }} -c .github/.pre-commit-pr.yaml
