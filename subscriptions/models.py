@@ -28,6 +28,9 @@ class User(AbstractUser):
         'Фамилия',
         max_length=LENGTH_LIMITS_CHAR_FIELDS,
     )
+    account_balance = models.DecimalField(
+        'Счет', max_digits=10, decimal_places=2)
+    cashback = models.DecimalField('Кэшбек', max_digits=10, decimal_places=2)
 
     class Meta:
         ordering = ('phone_number',)
@@ -41,11 +44,11 @@ class Subscription(models.Model):
         'Название', max_length=LENGTH_LIMITS_CHAR_FIELDS)
     description = models.TextField('Описание')
     monthly_price = models.DecimalField(
-        'Цена подписки за месяц', max_digits=3, decimal_places=2)
+        'Цена подписки за месяц', max_digits=5, decimal_places=2)
     semi_annual_price = models.DecimalField(
-        'Цена подписки за полгода', max_digits=3, decimal_places=2)
+        'Цена подписки за полгода', max_digits=5, decimal_places=2)
     annual_price = models.DecimalField(
-        'Цена подписки за год', max_digits=3, decimal_places=2)
+        'Цена подписки за год', max_digits=5, decimal_places=2)
     users = models.ManyToManyField(
         User,
         through='UserSubscription',
