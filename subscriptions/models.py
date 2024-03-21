@@ -3,6 +3,9 @@ from django.db import models
 
 
 LENGTH_LIMITS_CHAR_FIELDS = 150
+LENGTH_LIMITS_PRICE_FIELDS = 5
+LENGTH_LIMIT_ACCOUNT_FIELD = 10
+DECIMAL_PLACES = 2
 
 
 class User(AbstractUser):
@@ -29,8 +32,15 @@ class User(AbstractUser):
         max_length=LENGTH_LIMITS_CHAR_FIELDS,
     )
     account_balance = models.DecimalField(
-        'Счет', max_digits=10, decimal_places=2)
-    cashback = models.DecimalField('Кэшбек', max_digits=10, decimal_places=2)
+        'Счет',
+        max_digits=LENGTH_LIMIT_ACCOUNT_FIELD,
+        decimal_places=DECIMAL_PLACES
+    )
+    cashback = models.DecimalField(
+        'Кэшбек',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES
+    )
 
     class Meta:
         ordering = ('phone_number',)
@@ -41,14 +51,25 @@ class User(AbstractUser):
 class Subscription(models.Model):
     """Модель подписок"""
     name = models.CharField(
-        'Название', max_length=LENGTH_LIMITS_CHAR_FIELDS)
+        'Название',
+        max_length=LENGTH_LIMITS_CHAR_FIELDS
+    )
     description = models.TextField('Описание')
     monthly_price = models.DecimalField(
-        'Цена подписки за месяц', max_digits=5, decimal_places=2)
+        'Цена подписки за месяц',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES
+    )
     semi_annual_price = models.DecimalField(
-        'Цена подписки за полгода', max_digits=5, decimal_places=2)
+        'Цена подписки за полгода',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES
+    )
     annual_price = models.DecimalField(
-        'Цена подписки за год', max_digits=5, decimal_places=2)
+        'Цена подписки за год',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES
+    )
     users = models.ManyToManyField(
         User,
         through='UserSubscription',
@@ -76,8 +97,19 @@ class UserSubscription(models.Model):
         verbose_name='Подписка'
     )
     start_date = models.DateField(
-        'Дата начала подписки', auto_now=True, auto_now_add=False)
-    end_date = models.DateField('Дата окончания подписки', blank=True)
+        'Дата начала подписки',
+        auto_now=True,
+        auto_now_add=False
+    )
+    end_date = models.DateField(
+        'Дата окончания подписки',
+        blank=True
+    )
+    price = models.DecimalField(
+        'Стоимость подписки',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES
+    )
 
     class Meta:
         ordering = ('user',)
