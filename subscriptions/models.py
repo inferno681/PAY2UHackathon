@@ -3,8 +3,9 @@ from django.db import models
 
 
 LENGTH_LIMITS_CHAR_FIELDS = 150
-LENGTH_LIMITS_PRICE_FIELDS = 5
+LENGTH_LIMITS_PRICE_FIELDS = 7
 LENGTH_LIMIT_ACCOUNT_FIELD = 10
+LENGTH_LIMIT_PHONE_NUMBER_FIELD = 10
 DECIMAL_PLACES = 2
 
 MONTH = 'monthly'
@@ -25,6 +26,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
     phone_number = models.CharField(
         'Номер телефона',
+        max_length=LENGTH_LIMIT_PHONE_NUMBER_FIELD,
         unique=True,
         blank=False,
     )
