@@ -3,8 +3,10 @@ from django.db import models
 
 
 LENGTH_LIMITS_CHAR_FIELDS = 150
-LENGTH_LIMITS_PRICE_FIELDS = 5
+LENGTH_LIMITS_PRICE_FIELDS = 7
 LENGTH_LIMIT_ACCOUNT_FIELD = 10
+LENGTH_LIMIT_PHONE_NUMBER_FIELD = 10
+LENGTH_LIMITS_LINK_FIELDS = 200
 DECIMAL_PLACES = 2
 
 MONTH = 'monthly'
@@ -25,6 +27,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
     phone_number = models.CharField(
         'Номер телефона',
+        max_length=LENGTH_LIMIT_PHONE_NUMBER_FIELD,
         unique=True,
         blank=False,
     )
@@ -65,6 +68,14 @@ class Subscription(models.Model):
         max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
     description = models.TextField('Описание')
+    logo_link = models.CharField(
+        'Ссылка на логотип',
+        max_length=LENGTH_LIMITS_LINK_FIELDS,
+    )
+    service_link = models.CharField(
+        'Ссылка на сайт подписки',
+        max_length=LENGTH_LIMITS_LINK_FIELDS,
+    )
     monthly_price = models.DecimalField(
         'Цена подписки за месяц',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,

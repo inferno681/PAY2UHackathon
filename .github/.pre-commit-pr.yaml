@@ -10,3 +10,4 @@ repos:
                                    flake8-broken-line, flake8-string-format ]
         files: "^.*\\.py$"
         exclude: "__init__.py$"
+        exclude: "migrations.*$"
