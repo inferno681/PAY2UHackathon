@@ -11,6 +11,7 @@ from .serializers import (
     GetTokenSerializer,
     SubscriptionSerializer,
     ShortSubscriptionSerializer,
+    UserSerializer,
 )
 from subscriptions.models import Subscription, User
 
@@ -42,11 +43,7 @@ class GetTokenView(APIView):
         return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
-class SubscriptionViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
-):
+class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     queryset = Subscription.objects.all()
 
@@ -54,3 +51,9 @@ class SubscriptionViewSet(
         if self.action in ('retrieve',):
             return SubscriptionSerializer
         return ShortSubscriptionSerializer
+
+
+class UserView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = (AllowAny,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
