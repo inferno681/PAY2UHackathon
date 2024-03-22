@@ -7,7 +7,11 @@ from rest_framework.views import APIView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from .serializers import GetTokenSerializer, SubscriptionSerializer
+from .serializers import (
+    GetTokenSerializer,
+    SubscriptionSerializer,
+    ShortSubscriptionSerializer,
+)
 from subscriptions.models import Subscription, User
 
 
@@ -38,7 +42,15 @@ class GetTokenView(APIView):
         return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
-class SubscriptionViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class SubscriptionViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     permission_classes = (AllowAny,)
     queryset = Subscription.objects.all()
-    serializer_class = SubscriptionSerializer
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve',):
+            return SubscriptionSerializer
+        return ShortSubscriptionSerializer

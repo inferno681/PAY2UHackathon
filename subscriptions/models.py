@@ -91,6 +91,12 @@ class Subscription(models.Model):
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
         decimal_places=DECIMAL_PLACES
     )
+    conditions = models.TextField('Условия')
+    cashback_procent = models.DecimalField(
+        '% кэшбека',
+        max_digits=5,
+        decimal_places=DECIMAL_PLACES
+    )
     users = models.ManyToManyField(
         User,
         through='UserSubscription',

@@ -14,4 +14,16 @@ class GetTokenSerializer(serializers.Serializer):
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
-        fields = '__all__'
+        exclude = ('users',)
+
+
+class ShortSubscriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = (
+            'id',
+            'name',
+            'logo_link',
+            'monthly_price',
+            'cashback_procent'
+        )
