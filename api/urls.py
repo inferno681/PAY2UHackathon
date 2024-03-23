@@ -9,13 +9,10 @@ router_v1.register(
     SubscriptionViewSet,
     basename='subscription'
 )
-router_v1.register(
-    r'my',
-    UserView,
-    basename='my'
-)
+
 
 urlpatterns = [
     path('v1/', include(router_v1.urls)),
     path('auth/token/', GetTokenView.as_view(), name='signup'),
+    path('my/', UserView.as_view(), name='my'),
 ]

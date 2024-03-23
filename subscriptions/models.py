@@ -153,14 +153,21 @@ class UserSubscription(models.Model):
             name='unique_user_subscription'
         )]
 
-    class Card(models.Model):
-        user = models.ForeignKey(
-            User,
-            related_name='cards',
-            on_delete=models.CASCADE,
-            verbose_name='Пользователь'
-        )
-        card_number = models.CharField(
-            'Номер карты',
-            max_length=19
-        )
+
+class Card(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name='cards',
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    card_number = models.CharField(
+        'Номер карты',
+        max_length=19,
+        unique=True
+    )
+
+    class Meta:
+        ordering = ('card_number',)
+        verbose_name = 'Банковская карта'
+        verbose_name_plural = 'Банковские карты'

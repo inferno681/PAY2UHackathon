@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -53,7 +53,8 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
         return ShortSubscriptionSerializer
 
 
-class UserView(mixins.ListModelMixin, viewsets.GenericViewSet):
+class UserView(APIView):
     permission_classes = (AllowAny,)
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
