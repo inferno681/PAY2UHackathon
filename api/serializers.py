@@ -66,7 +66,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_active_subscriptions(self, obj):
         return UserShortSubscriptionSerializer(
             obj.subscription_set.filter(
-                usersubscriptions__end_date__lte=timezone.now()).values(
+                usersubscriptions__end_date__gte=timezone.now()).values(
                 *ShortSubscriptionSerializer.Meta.fields,
                 'usersubscriptions__start_date',
                 'usersubscriptions__end_date',
@@ -78,7 +78,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_inactive_subscriptions(self, obj):
         return UserShortSubscriptionSerializer(
             obj.subscription_set.filter(
-                usersubscriptions__end_date__gt=timezone.now()).values(
+                usersubscriptions__end_date__lt=timezone.now()).values(
                 *ShortSubscriptionSerializer.Meta.fields,
                 'usersubscriptions__start_date',
                 'usersubscriptions__end_date',
