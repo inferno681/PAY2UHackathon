@@ -55,9 +55,9 @@ jobs:
           sudo docker compose -f docker-compose-prod.yaml pull
           sudo docker compose -f docker-compose-prod.yaml down
           sudo docker compose -f docker-compose-prod.yaml up -d
-          sudo docker compose -f docker-compose.prod.yaml exec backend python manage.py migrate
-          sudo docker compose -f docker-compose.prod.yaml exec backend python manage.py collectstatic
-          sudo docker compose -f docker-compose.prod.yaml exec backend cp -r /app/collected_static/. /backend_static/static/
+          sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py migrate
+          sudo docker compose -f docker-compose-prod.yaml exec backend python manage.py collectstatic
+          sudo docker compose -f docker-compose-prod.yaml exec backend cp -r /app/collected_static/. /backend_static/static/
 
   send_message:
     runs-on: ubuntu-latest
