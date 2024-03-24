@@ -43,7 +43,6 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class UserView(APIView):
-    permission_classes = (AllowAny,)
     serializer_class = UserSerializer
 
     @extend_schema(tags=['Users'],
