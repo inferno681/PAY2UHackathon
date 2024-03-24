@@ -7,12 +7,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
 from .serializers import (
+    CoverRetrieveSerializer,
+    CoverSerializer,
     GetTokenSerializer,
-    SubscriptionSerializer,
-    ShortSubscriptionSerializer,
+
     UserSerializer,
 )
-from subscriptions.models import Subscription, User
+from subscriptions.models import User, Cover
 
 
 class GetTokenView(APIView):
@@ -33,13 +34,13 @@ class GetTokenView(APIView):
 
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
-    queryset = Subscription.objects.all()
+    queryset = Cover.objects.all()
 
     @extend_schema(tags=['Subscriptions'])
     def get_serializer_class(self):
         if self.action in ('retrieve',):
-            return SubscriptionSerializer
-        return ShortSubscriptionSerializer
+            return CoverRetrieveSerializer
+        return CoverSerializer
 
 
 class UserView(APIView):

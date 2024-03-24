@@ -67,13 +67,13 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
 
-class Subscription(models.Model):
-    """Модель подписок"""
+class Cover(models.Model):
+    """Модель обложек для подписок"""
     name = models.CharField(
         'Название',
         max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
-    description = models.TextField('Описание')
+    preview = models.TextField('Краткое описание')
     logo_link = models.CharField(
         'Ссылка на логотип',
         max_length=LENGTH_LIMITS_LINK_FIELDS,
@@ -82,6 +82,21 @@ class Subscription(models.Model):
         'Ссылка на сайт подписки',
         max_length=LENGTH_LIMITS_LINK_FIELDS,
     )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Обложка'
+        verbose_name_plural = 'Обложки'
+
+
+class Subscription(models.Model):
+    """Модель подписок"""
+    name = models.CharField(
+        'Название',
+        max_length=LENGTH_LIMITS_CHAR_FIELDS
+    )
+    description = models.TextField('Описание')
+
     monthly_price = models.DecimalField(
         'Цена подписки за месяц',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
@@ -100,8 +115,7 @@ class Subscription(models.Model):
         decimal_places=DECIMAL_PLACES,
         validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
-    conditions = models.TextField('Условия')
-    cashback_procent = models.DecimalField(
+    cashback_percent = models.DecimalField(
         '% кэшбека',
         max_digits=5,
         decimal_places=DECIMAL_PLACES,
@@ -111,6 +125,12 @@ class Subscription(models.Model):
         User,
         through='UserSubscription',
         verbose_name='Пользователи'
+    )
+    cover = models.ForeignKey(
+        Cover,
+        related_name='subscriptions',
+        on_delete=models.CASCADE,
+        verbose_name='Обложка',
     )
 
     class Meta:

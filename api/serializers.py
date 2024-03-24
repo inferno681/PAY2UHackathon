@@ -1,9 +1,9 @@
+from django.db.models import Max, Min
 from django.utils import timezone
-
 from rest_framework import serializers
 
 from subscriptions.models import LENGTH_LIMIT_PHONE_NUMBER_FIELD
-from subscriptions.models import Subscription, User
+from subscriptions.models import Subscription, User, Cover, UserSubscription
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -12,10 +12,59 @@ class GetTokenSerializer(serializers.Serializer):
         required=True)
 
 
+class CoverSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField()
+    cashback_percent = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cover
+        fields = (
+            'id',
+            'name',
+            'preview',
+            'logo_link',
+            'price',
+            'cashback_percent',
+            'is_subscribed'
+        )
+
+    def get_price(self, obj):
+        return min(obj.subscriptions.aggregate(
+            min_monthly_price=Min('monthly_price'),
+            min_semi_annual_price=Min('semi_annual_price'),
+            min_annual_price=Min('annual_price')
+        ).values())
+
+    def get_cashback_percent(self, obj):
+        return obj.subscriptions.aggregate(
+            Max('cashback_percent')
+        ).get('cashback_percent__max')
+
+    def get_is_subscribed(self, obj):
+        return UserSubscription.objects.filter(
+            subscription__in=obj.subscriptions,
+            user=self.context.get('request').user
+        )
+
+
 class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         exclude = ('users',)
+
+
+class CoverRetrieveSerializer(serializers.ModelSerializer):
+    subscriptions = SubscriptionSerializer(many=True)
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Cover
+        fields = (
+            'name',
+            'logo_link',
+            'subscriptions'
+        )
 
 
 class ShortSubscriptionSerializer(serializers.ModelSerializer):
