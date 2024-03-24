@@ -6,7 +6,7 @@ COPY requirements.txt ./
 
 RUN python -m pip install --upgrade pip
 
-RUN apt-get update && apt-get install -y vim
+RUN apt-get update && apt-get install -y
 
 RUN pip install -r requirements.txt --no-cache-dir
 
