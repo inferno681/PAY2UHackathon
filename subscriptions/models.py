@@ -1,4 +1,7 @@
+from decimal import Decimal
+
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -8,6 +11,7 @@ LENGTH_LIMIT_ACCOUNT_FIELD = 10
 LENGTH_LIMIT_PHONE_NUMBER_FIELD = 10
 LENGTH_LIMITS_LINK_FIELDS = 200
 DECIMAL_PLACES = 2
+MIN_VALUE_DECIMAL_FIELDS = Decimal.from_float(0.0)
 
 MONTH = 'monthly'
 SEMI_ANNUAL = 'semi-annual'
@@ -47,12 +51,14 @@ class User(AbstractUser):
     account_balance = models.DecimalField(
         'Счет',
         max_digits=LENGTH_LIMIT_ACCOUNT_FIELD,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     cashback = models.DecimalField(
         'Кэшбек',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),),
     )
 
     class Meta:
@@ -79,17 +85,27 @@ class Subscription(models.Model):
     monthly_price = models.DecimalField(
         'Цена подписки за месяц',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     semi_annual_price = models.DecimalField(
         'Цена подписки за полгода',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     annual_price = models.DecimalField(
         'Цена подписки за год',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
+    )
+    conditions = models.TextField('Условия')
+    cashback_procent = models.DecimalField(
+        '% кэшбека',
+        max_digits=5,
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     users = models.ManyToManyField(
         User,
@@ -129,7 +145,8 @@ class UserSubscription(models.Model):
     price = models.DecimalField(
         'Стоимость подписки',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
-        decimal_places=DECIMAL_PLACES
+        decimal_places=DECIMAL_PLACES,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     period = models.CharField(
         'Продолжительность подписки',
@@ -147,14 +164,21 @@ class UserSubscription(models.Model):
             name='unique_user_subscription'
         )]
 
-    class Card(models.Model):
-        user = models.ForeignKey(
-            User,
-            related_name='cards',
-            on_delete=models.CASCADE,
-            verbose_name='Пользователь'
-        )
-        card_number = models.CharField(
-            'Номер карты',
-            max_length=19
-        )
+
+class Card(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name='cards',
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+    )
+    card_number = models.CharField(
+        'Номер карты',
+        max_length=19,
+        unique=True
+    )
+
+    class Meta:
+        ordering = ('card_number',)
+        verbose_name = 'Банковская карта'
+        verbose_name_plural = 'Банковские карты'
