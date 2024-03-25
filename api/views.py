@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
+from .filters import CoverFilter
 from .serializers import (
     CategorySerializer,
     CoverRetrieveSerializer,
@@ -51,6 +53,8 @@ class CategoryViewSet(
 
 class CoverViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Cover.objects.all()
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = CoverFilter
 
     @extend_schema(tags=['Subscriptions'])
     def get_serializer_class(self):
