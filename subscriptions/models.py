@@ -26,7 +26,6 @@ SUBSCRIPTION_PERIOD = (
 
 class User(AbstractUser):
     """Модель пользователя."""
-
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = []
     phone_number = models.CharField(
@@ -67,6 +66,19 @@ class User(AbstractUser):
         verbose_name_plural = 'Пользователи'
 
 
+class Category(models.Model):
+    """Модель категорий"""
+    name = models.CharField(
+        'Название',
+        max_length=LENGTH_LIMITS_CHAR_FIELDS
+    )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
+
 class Cover(models.Model):
     """Модель обложек для подписок"""
     name = models.CharField(
@@ -81,6 +93,10 @@ class Cover(models.Model):
     service_link = models.CharField(
         'Ссылка на сайт подписки',
         max_length=LENGTH_LIMITS_LINK_FIELDS,
+    )
+    categories = models.ManyToManyField(
+        Category,
+        verbose_name='Категории'
     )
 
     class Meta:
@@ -173,6 +189,10 @@ class UserSubscription(models.Model):
         max_length=max(len(period) for period, _ in SUBSCRIPTION_PERIOD),
         default=MONTH,
         choices=SUBSCRIPTION_PERIOD
+    )
+    autorenewal = models.BooleanField(
+        'Автопродление',
+        default=True
     )
 
     class Meta:

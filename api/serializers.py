@@ -2,9 +2,12 @@ from datetime import timedelta
 
 from django.db.models import Max, Min
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
 
 from subscriptions.models import (
+    Category,
     Cover,
     Subscription,
     User,
@@ -28,10 +31,22 @@ class GetTokenSerializer(serializers.Serializer):
         required=True)
 
 
+class CategorySerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ('id', 'name')
+
+
 class CoverSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField()
     cashback_percent = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True
+    )
 
     class Meta:
         model = Cover
@@ -42,9 +57,11 @@ class CoverSerializer(serializers.ModelSerializer):
             'logo_link',
             'price',
             'cashback_percent',
+            'categories',
             'is_subscribed'
         )
 
+    @extend_schema_field(OpenApiTypes.DECIMAL)
     def get_price(self, obj):
         return min(obj.subscriptions.aggregate(
             min_monthly_price=Min('monthly_price'),
@@ -52,11 +69,13 @@ class CoverSerializer(serializers.ModelSerializer):
             min_annual_price=Min('annual_price')
         ).values())
 
+    @extend_schema_field(OpenApiTypes.DECIMAL)
     def get_cashback_percent(self, obj):
         return obj.subscriptions.aggregate(
             Max('cashback_percent')
         ).get('cashback_percent__max')
 
+    @extend_schema_field(OpenApiTypes.BOOL)
     def get_is_subscribed(self, obj):
         return UserSubscription.objects.filter(
             subscription__in=obj.subscriptions.all(),
@@ -76,6 +95,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         model = Subscription
         exclude = ('users',)
 
+    @extend_schema_field(OpenApiTypes.BOOL)
     def get_is_subscribed(self, obj):
         return UserSubscription.objects.filter(
             subscription=obj,
@@ -93,6 +113,7 @@ class CoverRetrieveSerializer(serializers.ModelSerializer):
             'name',
             'logo_link',
             'service_link',
+            'categories',
             'subscriptions'
         )
 
@@ -104,6 +125,11 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
     logo_link = serializers.StringRelatedField(
         source='subscription.cover.logo_link')
     is_active = serializers.SerializerMethodField()
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True,
+        source='subscription.cover.categories'
+    )
 
     class Meta:
         model = UserSubscription
@@ -114,9 +140,11 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
             'price',
             'period',
             'logo_link',
+            'categories',
             'is_active',
         )
 
+    @extend_schema_field(OpenApiTypes.BOOL)
     def get_is_active(self, obj):
         return obj.end_date >= timezone.now().date()
 
@@ -143,6 +171,21 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         read_only=True, source='cover.logo_link')
     service_link = serializers.StringRelatedField(
         read_only=True, source='cover.service_link')
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        many=True,
+        source='cover.categories'
+    )
+    period = serializers.StringRelatedField(
+        allow_null=True,
+        read_only=True,
+        source='usersubscriptions.first.period'
+    )
+    autorenewal = serializers.BooleanField(
+        allow_null=True,
+        read_only=True,
+        source='usersubscriptions.first.autorenewal'
+    )
 
     class Meta:
         model = Subscription
