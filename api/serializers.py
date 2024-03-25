@@ -45,7 +45,7 @@ class CoverSerializer(serializers.ModelSerializer):
         return UserSubscription.objects.filter(
             subscription__in=obj.subscriptions.all(),
             user=self.context.get('request').user,
-            end_date__gte=timezone.now()
+            end_date__gte=timezone.now().date()
         ).exists()
 
 
@@ -64,7 +64,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return UserSubscription.objects.filter(
             subscription=obj,
             user=self.context.get('request').user,
-            end_date__gte=timezone.now()
+            end_date__gte=timezone.now().date()
         ).exists()
 
 
@@ -76,41 +76,38 @@ class CoverRetrieveSerializer(serializers.ModelSerializer):
         fields = (
             'name',
             'logo_link',
+            'service_link',
             'subscriptions'
         )
 
 
-class ShortSubscriptionSerializer(serializers.ModelSerializer):
+class UserShortSubscriptionSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        read_only=True, source='subscription.id')
+    name = serializers.StringRelatedField(source='subscription.name')
+    logo_link = serializers.StringRelatedField(
+        source='subscription.cover.logo_link')
+    is_active = serializers.SerializerMethodField()
+
     class Meta:
-        model = Subscription
+        model = UserSubscription
         fields = (
             'id',
             'name',
+            'end_date',
+            'price',
+            'period',
             'logo_link',
-            'monthly_price',
-            'cashback_procent'
+            'is_active',
         )
 
-
-class UserShortSubscriptionSerializer(ShortSubscriptionSerializer):
-    start_date = serializers.DateField(
-        source='usersubscriptions__start_date')
-    end_date = serializers.DateField(
-        read_only=True, source='usersubscriptions__end_date')
-    price = serializers.ReadOnlyField(source='usersubscriptions__price')
-
-    class Meta:
-        model = Subscription
-        fields = (
-            *ShortSubscriptionSerializer.Meta.fields,
-            'start_date',
-            'end_date',
-            'price')
+    def get_is_active(self, obj):
+        return obj.end_date >= timezone.now().date()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    active_subscriptions = serializers.SerializerMethodField()
-    inactive_subscriptions = serializers.SerializerMethodField()
+    subscriptions = UserShortSubscriptionSerializer(
+        many=True, source='usersubscriptions')
 
     class Meta:
         model = User
@@ -121,30 +118,5 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'account_balance',
             'cashback',
-            'active_subscriptions',
-            'inactive_subscriptions',
+            'subscriptions',
         )
-
-    def get_active_subscriptions(self, obj):
-        return UserShortSubscriptionSerializer(
-            obj.subscription_set.filter(
-                usersubscriptions__end_date__gte=timezone.now()).values(
-                *ShortSubscriptionSerializer.Meta.fields,
-                'usersubscriptions__start_date',
-                'usersubscriptions__end_date',
-                'usersubscriptions__price'),
-            many=True,
-            read_only=True
-        ).data
-
-    def get_inactive_subscriptions(self, obj):
-        return UserShortSubscriptionSerializer(
-            obj.subscription_set.filter(
-                usersubscriptions__end_date__lt=timezone.now()).values(
-                *ShortSubscriptionSerializer.Meta.fields,
-                'usersubscriptions__start_date',
-                'usersubscriptions__end_date',
-                'usersubscriptions__price'),
-            many=True,
-            read_only=True
-        ).data
