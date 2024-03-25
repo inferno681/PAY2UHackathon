@@ -90,10 +90,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         allow_null=True,
         source='usersubscriptions.first.end_date'
     )
-    categories = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(),
-        many=True
-    )
 
     class Meta:
         model = Subscription
@@ -117,6 +113,7 @@ class CoverRetrieveSerializer(serializers.ModelSerializer):
             'name',
             'logo_link',
             'service_link',
+            'categories',
             'subscriptions'
         )
 
@@ -178,6 +175,16 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         queryset=Category.objects.all(),
         many=True,
         source='cover.categories'
+    )
+    period = serializers.StringRelatedField(
+        allow_null=True,
+        read_only=True,
+        source='usersubscriptions.first.period'
+    )
+    autorenewal = serializers.BooleanField(
+        allow_null=True,
+        read_only=True,
+        source='usersubscriptions.first.autorenewal'
     )
 
     class Meta:
