@@ -1,18 +1,20 @@
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiExample
-from rest_framework import status, viewsets
+from drf_spectacular.utils import extend_schema
+from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
 from .serializers import (
+    CoverRetrieveSerializer,
+    CoverSerializer,
     GetTokenSerializer,
-    SubscriptionSerializer,
-    ShortSubscriptionSerializer,
     UserSerializer,
+    SubscriptionReadSerializer,
+    SubscriptionWriteSerializer
 )
-from subscriptions.models import Subscription, User
+from subscriptions.models import User, Cover, Subscription, UserSubscription
 
 
 class GetTokenView(APIView):
@@ -31,55 +33,42 @@ class GetTokenView(APIView):
         return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
-class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
+class CoverViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
-    queryset = Subscription.objects.all()
+    queryset = Cover.objects.all()
 
     @extend_schema(tags=['Subscriptions'])
     def get_serializer_class(self):
         if self.action in ('retrieve',):
-            return SubscriptionSerializer
-        return ShortSubscriptionSerializer
+            return CoverRetrieveSerializer
+        return CoverSerializer
 
 
 class UserView(APIView):
     serializer_class = UserSerializer
 
-    @extend_schema(tags=['Users'],
-                   examples=[
-        OpenApiExample(
-            "example",
-            value={
-                "phone_number": "9211231212",
-                "first_name": "string",
-                "middle_name": "string ",
-                "last_name": "string",
-                "account_balance": "15000.00",
-                "cashback": "151.00",
-                "active_subscriptions": [
-                    {
-                            "id": 1,
-                            "name": "string",
-                            "logo_link": "string",
-                            "monthly_price": "100.00",
-                            "cashback_procent": "10.00",
-                            "start_date": "2024-03-15",
-                            "end_date": "2024-04-15",
-                            "price": "100.00"
-                    }
-                ],
-                "inactive_subscriptions": [{"id": 51,
-                                            "name": "string",
-                                            "logo_link": "string",
-                                            "monthly_price": "100.00",
-                                            "cashback_procent": "10.00",
-                                            "start_date": "2024-03-15",
-                                            "end_date": "2024-01-15",
-                                            "price": "100.00"}]
-            },
-            response_only=True,
-        ),
-    ]
-    )
+    @extend_schema(tags=['Users'])
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class SubscriptionViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    serializer_class = SubscriptionReadSerializer
+    queryset = Subscription.objects.all()
+    http_method_names = ('get', 'post', 'patch')
+
+    @extend_schema(tags=['Subscriptions'])
+    def get_queryset(self):
+        if self.action in ('retrieve',):
+            return Subscription.objects.all()
+        return UserSubscription.objects.all()
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve',):
+            return SubscriptionReadSerializer
+        return SubscriptionWriteSerializer
