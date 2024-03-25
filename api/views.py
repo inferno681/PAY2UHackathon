@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -10,10 +10,11 @@ from .serializers import (
     CoverRetrieveSerializer,
     CoverSerializer,
     GetTokenSerializer,
-
     UserSerializer,
+    SubscriptionReadSerializer,
+    SubscriptionWriteSerializer
 )
-from subscriptions.models import User, Cover
+from subscriptions.models import User, Cover, Subscription, UserSubscription
 
 
 class GetTokenView(APIView):
@@ -32,7 +33,7 @@ class GetTokenView(APIView):
         return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
-class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
+class CoverViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     queryset = Cover.objects.all()
 
@@ -49,3 +50,25 @@ class UserView(APIView):
     @extend_schema(tags=['Users'])
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class SubscriptionViewSet(
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    serializer_class = SubscriptionReadSerializer
+    queryset = Subscription.objects.all()
+    http_method_names = ('get', 'post', 'patch')
+
+    @extend_schema(tags=['Subscriptions'])
+    def get_queryset(self):
+        if self.action in ('retrieve',):
+            return Subscription.objects.all()
+        return UserSubscription.objects.all()
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve',):
+            return SubscriptionReadSerializer
+        return SubscriptionWriteSerializer

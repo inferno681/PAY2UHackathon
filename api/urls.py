@@ -1,13 +1,18 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import GetTokenView, SubscriptionViewSet, UserView
+from .views import GetTokenView, CoverViewSet, SubscriptionViewSet, UserView
 
 router_v1 = routers.DefaultRouter()
 router_v1.register(
-    r'cover',
-    SubscriptionViewSet,
+    r'covers',
+    CoverViewSet,
     basename='cover'
+)
+router_v1.register(
+    r'subscriptions',
+    SubscriptionViewSet,
+    basename='subscription'
 )
 
 

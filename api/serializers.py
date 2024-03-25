@@ -1,9 +1,25 @@
+from datetime import timedelta
+
 from django.db.models import Max, Min
 from django.utils import timezone
 from rest_framework import serializers
 
-from subscriptions.models import LENGTH_LIMIT_PHONE_NUMBER_FIELD
-from subscriptions.models import Subscription, User, Cover, UserSubscription
+from subscriptions.models import (
+    Cover,
+    Subscription,
+    User,
+    UserSubscription,
+    ANNUAL,
+    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
+    MONTH,
+    SEMI_ANNUAL
+)
+
+ADDITION_SUBSCRIPTION_DAYS = {
+    MONTH: 30,
+    SEMI_ANNUAL: 180,
+    ANNUAL: 365
+}
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -81,7 +97,7 @@ class CoverRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
-class UserShortSubscriptionSerializer(serializers.ModelSerializer):
+class UserSubscriptionSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         read_only=True, source='subscription.id')
     name = serializers.StringRelatedField(source='subscription.name')
@@ -106,7 +122,7 @@ class UserShortSubscriptionSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    subscriptions = UserShortSubscriptionSerializer(
+    subscriptions = UserSubscriptionSerializer(
         many=True, source='usersubscriptions')
 
     class Meta:
@@ -120,3 +136,65 @@ class UserSerializer(serializers.ModelSerializer):
             'cashback',
             'subscriptions',
         )
+
+
+class SubscriptionReadSerializer(SubscriptionSerializer):
+    logo_link = serializers.StringRelatedField(
+        read_only=True, source='cover.logo_link')
+    service_link = serializers.StringRelatedField(
+        read_only=True, source='cover.service_link')
+
+    class Meta:
+        model = Subscription
+        exclude = (*SubscriptionSerializer.Meta.exclude,)
+
+
+class SubscriptionWriteSerializer(serializers.ModelSerializer):
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Subscription.objects.all(), source='subscription.id')
+
+    class Meta:
+        model = UserSubscription
+        fields = (
+            'id',
+            'period'
+        )
+
+    def create(self, validated_data):
+        period = validated_data['period']
+        user = self.context.get('request').user
+        subscription = validated_data['subscription']['id']
+        period_accordance = {
+            MONTH: subscription.monthly_price,
+            SEMI_ANNUAL: subscription.semi_annual_price,
+            ANNUAL: subscription.annual_price
+        }
+        obj = UserSubscription.objects.create(
+            start_date=timezone.now().date(),
+            end_date=(timezone.now().date() + timedelta(
+                days=ADDITION_SUBSCRIPTION_DAYS[period]
+            )),
+            period=period,
+            price=period_accordance[period],
+            user=user,
+            subscription=subscription
+        )
+        return obj
+
+    def update(self, usersubscription, validated_data):
+        period = validated_data['period']
+        if usersubscription.period != period:
+            period_accordance = {
+                MONTH: usersubscription.subscriptions.monthly_price,
+                SEMI_ANNUAL: usersubscription.subscriptions.semi_annual_price,
+                ANNUAL: usersubscription.subscriptions.annual_price
+            }
+            usersubscription.period = period
+            usersubscription.price = period_accordance[period]
+            usersubscription.save()
+        return usersubscription
+
+    def to_representation(self, subscription):
+        return SubscriptionReadSerializer(
+            subscription.subscription,
+            context={'request': self.context.get('request')}).data
