@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -46,41 +46,6 @@ class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
 class UserView(APIView):
     serializer_class = UserSerializer
 
-    @extend_schema(tags=['Users'],
-                   examples=[
-        OpenApiExample(
-            "example",
-            value={
-                "phone_number": "9211231212",
-                "first_name": "string",
-                "middle_name": "string ",
-                "last_name": "string",
-                "account_balance": "15000.00",
-                "cashback": "151.00",
-                "active_subscriptions": [
-                    {
-                            "id": 1,
-                            "name": "string",
-                            "logo_link": "string",
-                            "monthly_price": "100.00",
-                            "cashback_procent": "10.00",
-                            "start_date": "2024-03-15",
-                            "end_date": "2024-04-15",
-                            "price": "100.00"
-                    }
-                ],
-                "inactive_subscriptions": [{"id": 51,
-                                            "name": "string",
-                                            "logo_link": "string",
-                                            "monthly_price": "100.00",
-                                            "cashback_procent": "10.00",
-                                            "start_date": "2024-03-15",
-                                            "end_date": "2024-01-15",
-                                            "price": "100.00"}]
-            },
-            response_only=True,
-        ),
-    ]
-    )
+    @extend_schema(tags=['Users'])
     def get(self, request):
         return Response(UserSerializer(request.user).data)

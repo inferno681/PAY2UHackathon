@@ -43,20 +43,33 @@ class CoverSerializer(serializers.ModelSerializer):
 
     def get_is_subscribed(self, obj):
         return UserSubscription.objects.filter(
-            subscription__in=obj.subscriptions,
-            user=self.context.get('request').user
-        )
+            subscription__in=obj.subscriptions.all(),
+            user=self.context.get('request').user,
+            end_date__gte=timezone.now()
+        ).exists()
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField()
+    end_date = serializers.DateField(
+        allow_null=True,
+        source='usersubscriptions.first.end_date'
+    )
+
     class Meta:
         model = Subscription
         exclude = ('users',)
 
+    def get_is_subscribed(self, obj):
+        return UserSubscription.objects.filter(
+            subscription=obj,
+            user=self.context.get('request').user,
+            end_date__gte=timezone.now()
+        ).exists()
+
 
 class CoverRetrieveSerializer(serializers.ModelSerializer):
-    subscriptions = SubscriptionSerializer(many=True)
-    is_subscribed = serializers.SerializerMethodField()
+    subscriptions = SubscriptionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Cover

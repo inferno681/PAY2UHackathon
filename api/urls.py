@@ -5,9 +5,9 @@ from .views import GetTokenView, SubscriptionViewSet, UserView
 
 router_v1 = routers.DefaultRouter()
 router_v1.register(
-    r'subscription',
+    r'cover',
     SubscriptionViewSet,
-    basename='subscription'
+    basename='cover'
 )
 
 
