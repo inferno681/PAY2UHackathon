@@ -67,10 +67,16 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
+    """Модель категорий"""
     name = models.CharField(
         'Название',
         max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class Cover(models.Model):
