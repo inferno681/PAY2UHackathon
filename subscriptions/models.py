@@ -69,7 +69,7 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'Название',
-        max_length=LENGTH_LIMITS_CHAR_FIELDS        
+        max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
 
 
