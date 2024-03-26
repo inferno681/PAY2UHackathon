@@ -2,7 +2,7 @@ from datetime import timedelta
 import random
 import string
 
-from django.db.models import Max, Min
+from django.db.models import Exists, Max, Min, OuterRef
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
@@ -28,6 +28,8 @@ ADDITION_SUBSCRIPTION_DAYS = {
 }
 
 PROMOCODE_SYMBOLS = string.ascii_uppercase + string.digits
+
+SUBSCRIPTION_EXIST_ERROR = {'error': 'вы уже подписаные на один из тарифов'}
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -211,8 +213,15 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         subscription = data['subscription']['id']
-        subscription.usersubscriptions.filter(
-            user=self.context.get('request').user).exists()
+        if UserSubscription.objects.filter(
+            Exists(
+                UserSubscription.objects.filter(
+                    subscription=OuterRef('subscription'),
+                    subscription__cover=subscription.cover
+                )
+            )
+        ).exists():
+            raise serializers.ValidationError(SUBSCRIPTION_EXIST_ERROR)
         return data
 
     def create(self, validated_data):
