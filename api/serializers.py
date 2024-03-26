@@ -1,4 +1,6 @@
 from datetime import timedelta
+import random
+import string
 
 from django.db.models import Max, Min
 from django.utils import timezone
@@ -15,6 +17,7 @@ from subscriptions.models import (
     ANNUAL,
     LENGTH_LIMIT_PHONE_NUMBER_FIELD,
     MONTH,
+    PROMOCODE_LENGHT,
     SEMI_ANNUAL
 )
 
@@ -23,6 +26,8 @@ ADDITION_SUBSCRIPTION_DAYS = {
     SEMI_ANNUAL: 180,
     ANNUAL: 365
 }
+
+PROMOCODE_SYMBOLS = string.ascii_uppercase + string.digits
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -141,6 +146,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
             'period',
             'logo_link',
             'categories',
+            'promocode',
             'is_active',
         )
 
@@ -203,6 +209,12 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             'period'
         )
 
+    def validate(self, data):
+        subscription = data['subscription']['id']
+        subscription.usersubscriptions.filter(
+            user=self.context.get('request').user).exists()
+        return data
+
     def create(self, validated_data):
         period = validated_data['period']
         user = self.context.get('request').user
@@ -220,7 +232,9 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             period=period,
             price=period_accordance[period],
             user=user,
-            subscription=subscription
+            subscription=subscription,
+            promocode=''.join(random.choices(PROMOCODE_SYMBOLS,
+                                             k=PROMOCODE_LENGHT))
         )
         return obj
 
