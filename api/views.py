@@ -73,6 +73,7 @@ class UserView(APIView):
 
 class SubscriptionViewSet(
     mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet

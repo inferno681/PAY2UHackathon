@@ -194,7 +194,7 @@ class UserSubscription(models.Model):
     )
     autorenewal = models.BooleanField(
         'Автопродление',
-        default=False
+        default=True
     )
     promocode = models.CharField(
         'Промокод',
@@ -202,7 +202,9 @@ class UserSubscription(models.Model):
         max_length=PROMOCODE_LENGHT,
         validators=(RegexValidator(
             regex='^[A-Z0-9]+$', message=PROMOCODE_ERROR_MESSAGE
-        ),)
+        ),),
+        blank=True,
+        null=True,
     )
 
     class Meta:
