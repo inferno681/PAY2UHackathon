@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 
@@ -12,6 +12,8 @@ LENGTH_LIMIT_PHONE_NUMBER_FIELD = 10
 LENGTH_LIMITS_LINK_FIELDS = 200
 DECIMAL_PLACES = 2
 MIN_VALUE_DECIMAL_FIELDS = Decimal.from_float(0.0)
+PROMOCODE_LENGHT = 13
+PROMOCODE_ERROR_MESSAGE = 'Промокод содержит недопустимые символы'
 
 MONTH = 'monthly'
 SEMI_ANNUAL = 'semi-annual'
@@ -193,6 +195,16 @@ class UserSubscription(models.Model):
     autorenewal = models.BooleanField(
         'Автопродление',
         default=True
+    )
+    promocode = models.CharField(
+        'Промокод',
+        default='',
+        max_length=PROMOCODE_LENGHT,
+        validators=(RegexValidator(
+            regex='^[A-Z0-9]+$', message=PROMOCODE_ERROR_MESSAGE
+        ),),
+        blank=True,
+        null=True,
     )
 
     class Meta:

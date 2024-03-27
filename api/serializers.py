@@ -1,11 +1,12 @@
 from datetime import timedelta
 
-from django.db.models import Max, Min
+from django.db.models import Exists, Max, Min, OuterRef
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
 
+from .functions import promocode_generator
 from subscriptions.models import (
     Category,
     Cover,
@@ -23,6 +24,9 @@ ADDITION_SUBSCRIPTION_DAYS = {
     SEMI_ANNUAL: 180,
     ANNUAL: 365
 }
+
+SUBSCRIPTION_EXIST_ERROR = {'error': 'Вы уже подписаные на один из тарифов'}
+INSUFFICIENT_FUNDS = {'error': 'Недостаточно средств на счете'}
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -141,6 +145,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
             'period',
             'logo_link',
             'categories',
+            'promocode',
             'is_active',
         )
 
@@ -195,13 +200,29 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
 class SubscriptionWriteSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Subscription.objects.all(), source='subscription.id')
+    autorenewal = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
         model = UserSubscription
         fields = (
             'id',
-            'period'
+            'period',
+            'autorenewal'
         )
+
+    def validate(self, data):
+        subscription = data['subscription']['id']
+        if (self.context.get('request').method == 'POST'
+            and UserSubscription.objects.filter(
+            Exists(
+                UserSubscription.objects.filter(
+                    subscription=OuterRef('subscription'),
+                    subscription__cover=subscription.cover
+                )
+            )
+        ).exists()):
+            raise serializers.ValidationError(SUBSCRIPTION_EXIST_ERROR)
+        return data
 
     def create(self, validated_data):
         period = validated_data['period']
@@ -212,7 +233,14 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             SEMI_ANNUAL: subscription.semi_annual_price,
             ANNUAL: subscription.annual_price
         }
-        obj = UserSubscription.objects.create(
+        if user.account_balance <= period_accordance[period]:
+            raise serializers.ValidationError(INSUFFICIENT_FUNDS)
+        user.account_balance -= period_accordance[period]
+        user.cashback += period_accordance[period] * (
+            subscription.cashback_percent / 100
+        )
+        user.save()
+        return UserSubscription.objects.create(
             start_date=timezone.now().date(),
             end_date=(timezone.now().date() + timedelta(
                 days=ADDITION_SUBSCRIPTION_DAYS[period]
@@ -220,17 +248,17 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             period=period,
             price=period_accordance[period],
             user=user,
-            subscription=subscription
+            subscription=subscription,
+            promocode=promocode_generator()
         )
-        return obj
 
     def update(self, usersubscription, validated_data):
         period = validated_data['period']
         if usersubscription.period != period:
             period_accordance = {
-                MONTH: usersubscription.subscriptions.monthly_price,
-                SEMI_ANNUAL: usersubscription.subscriptions.semi_annual_price,
-                ANNUAL: usersubscription.subscriptions.annual_price
+                MONTH: usersubscription.subscription.monthly_price,
+                SEMI_ANNUAL: usersubscription.subscription.semi_annual_price,
+                ANNUAL: usersubscription.subscription.annual_price
             }
             usersubscription.period = period
             usersubscription.price = period_accordance[period]
