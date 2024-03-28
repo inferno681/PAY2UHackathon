@@ -246,12 +246,14 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             subscription.cashback_percent / 100
         )
         user.save()
+        promocode = promocode_generator()
         send_sms(
             (
                 'Вам оформлена подписка: '
                 f'Название: {subscription.name} '
                 f'Цена: {period_accordance[period]} '
-                f'Описание: {subscription.description}'
+                f'Описание: {subscription.description} '
+                f'Промокод: {promocode}'
 
             ),
             'PAY2U_phone_number',
@@ -267,7 +269,7 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             price=period_accordance[period],
             user=user,
             subscription=subscription,
-            promocode=promocode_generator()
+            promocode=promocode
         )
 
     def update(self, usersubscription, validated_data):
