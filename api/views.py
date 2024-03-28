@@ -29,6 +29,7 @@ from subscriptions.models import (
 class GetTokenView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = GetTokenSerializer
+    pagination_class = None
 
     @extend_schema(tags=['Users'])
     def post(self, request):
@@ -42,6 +43,7 @@ class GetTokenView(APIView):
         return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=['Categories'])
 class CategoryViewSet(
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
@@ -49,14 +51,15 @@ class CategoryViewSet(
 ):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    pagination_class = None
 
 
+@extend_schema(tags=['Covers'])
 class CoverViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Cover.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = CoverFilter
 
-    @extend_schema(tags=['Subscriptions'])
     def get_serializer_class(self):
         if self.action in ('retrieve',):
             return CoverRetrieveSerializer
@@ -65,15 +68,16 @@ class CoverViewSet(viewsets.ReadOnlyModelViewSet):
 
 class UserView(APIView):
     serializer_class = UserSerializer
+    pagination_class = None
 
     @extend_schema(tags=['Users'])
     def get(self, request):
         return Response(UserSerializer(request.user).data)
 
 
+@extend_schema(tags=['Subscriptions'])
 class SubscriptionViewSet(
     mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
@@ -82,7 +86,6 @@ class SubscriptionViewSet(
     queryset = Subscription.objects.all()
     http_method_names = ('get', 'post', 'patch')
 
-    @extend_schema(tags=['Subscriptions'])
     def get_queryset(self):
         if self.action in ('retrieve',):
             return Subscription.objects.all()

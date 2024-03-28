@@ -191,6 +191,11 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         read_only=True,
         source='usersubscriptions.first.autorenewal'
     )
+    promocode = serializers.StringRelatedField(
+        allow_null=True,
+        read_only=True,
+        source='usersubscriptions.first.promocode'
+    )
 
     class Meta:
         model = Subscription
