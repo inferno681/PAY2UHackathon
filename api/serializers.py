@@ -5,6 +5,7 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
+from sms import send_sms
 
 from .functions import promocode_generator
 from subscriptions.models import (
@@ -245,6 +246,18 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             subscription.cashback_percent / 100
         )
         user.save()
+        send_sms(
+            (
+                'Вам оформлена подписка: '
+                f'Название: {subscription.name} '
+                f'Цена: {period_accordance[period]} '
+                f'Описание: {subscription.description}'
+
+            ),
+            'PAY2U_phone_number',
+            ['+7' + user.phone_number],
+            fail_silently=False
+        )
         return UserSubscription.objects.create(
             start_date=timezone.now().date(),
             end_date=(timezone.now().date() + timedelta(
