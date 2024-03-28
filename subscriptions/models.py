@@ -208,7 +208,7 @@ class UserSubscription(models.Model):
     )
 
     class Meta:
-        ordering = ('end_date', 'price')
+        ordering = ('-end_date', 'price')
         verbose_name = 'Пользователь/Подписка'
         verbose_name_plural = 'Пользователи/Подписки'
         constraints = [models.UniqueConstraint(

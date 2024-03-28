@@ -173,3 +173,5 @@ SPECTACULAR_SETTINGS = {
         "filter": True,
     }
 }
+SMS_BACKEND = 'sms.backends.filebased.SmsBackend'
+SMS_FILE_PATH = BASE_DIR / 'sms'
