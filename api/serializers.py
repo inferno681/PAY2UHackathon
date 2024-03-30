@@ -127,6 +127,8 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         read_only=True, source='subscription.id')
     name = serializers.StringRelatedField(source='subscription.name')
+    description = serializers.StringRelatedField(
+        source='subscription.description')
     logo_link = serializers.StringRelatedField(
         source='subscription.cover.logo_link')
     is_active = serializers.SerializerMethodField()
@@ -141,6 +143,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'description',
             'end_date',
             'price',
             'period',
@@ -223,7 +226,9 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             Exists(
                 UserSubscription.objects.filter(
                     subscription=OuterRef('subscription'),
-                    subscription__cover=subscription.cover
+                    subscription__cover=subscription.cover,
+                    user=self.context.get('request').user
+
                 )
             )
         ).exists()):
