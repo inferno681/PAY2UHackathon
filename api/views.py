@@ -72,14 +72,6 @@ class UserView(APIView):
 
     @extend_schema(tags=['Users'])
     def get(self, request):
-        from sms import send_sms
-
-        send_sms(
-            'Here is the message',
-            '+12065550100',
-            ['+41792926112'],
-            fail_silently=False
-        )
         return Response(UserSerializer(request.user).data)
 
 
