@@ -86,7 +86,6 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name',)
-    list_filter = ('name',)
     search_fields = ('name',)
 
 
@@ -100,8 +99,8 @@ class CoverAdmin(admin.ModelAdmin):
         'service_link',
         'show_categories',
     )
-    list_filter = ('name',)
-    search_fields = ('name',)
+    list_filter = ('name', 'categories__name')
+    search_fields = ('name', 'categories__name')
     readonly_fields = ('show_categories', 'show_logo')
 
     @display(description='Категории')
@@ -129,7 +128,7 @@ class SubscriptionAdmin(admin.ModelAdmin):
         'cashback_percent',
 
     )
-    list_filter = ('name', 'monthly_price', )
+    list_filter = ('name', 'monthly_price', 'cashback_percent')
     search_fields = ('name',)
 
 
