@@ -25,6 +25,24 @@ SUBSCRIPTION_PERIOD = (
     (ANNUAL, 'Год')
 )
 
+USER = (
+    'Номер телефона: {phone_number}. '
+    'Баланс: {account_balance}. '
+    'Кэшбек: {cashback}.'
+)
+
+COVER = (
+    'Название: {name:.15}. '
+    'Описание: {preview:.30}.'
+)
+SUBSCRIPTION = (
+    'Название: {name:.15}. '
+    'Описание: {description:.30}. '
+    'Цена за месяц: {monthly_price}. '
+    'Цена за полгода: {semi_annual_price}. '
+    'Цена за год: {annual_price}.'
+)
+
 
 class User(AbstractUser):
     """Модель пользователя."""
@@ -67,6 +85,13 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
+    def __str__(self):
+        return USER.format(
+            phone_number=self.phone_number,
+            account_balance=self.account_balance,
+            cashback=self.cashback
+        )
+
 
 class Category(models.Model):
     """Модель категорий"""
@@ -79,6 +104,9 @@ class Category(models.Model):
         ordering = ('name',)
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
+
+    def __str__(self):
+        return self.name
 
 
 class Cover(models.Model):
@@ -105,6 +133,9 @@ class Cover(models.Model):
         ordering = ('name',)
         verbose_name = 'Обложка'
         verbose_name_plural = 'Обложки'
+
+    def __str__(self):
+        return COVER.format(name=self.name, preview=self.preview)
 
 
 class Subscription(models.Model):
@@ -155,6 +186,15 @@ class Subscription(models.Model):
         ordering = ('name',)
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return SUBSCRIPTION.format(
+            name=self.name,
+            description=self.description,
+            monthly_price=self.monthly_price,
+            semi_annual_price=self.semi_annual_price,
+            annual_price=self.semi_annual_price
+        )
 
 
 class UserSubscription(models.Model):
@@ -234,3 +274,6 @@ class Card(models.Model):
         ordering = ('card_number',)
         verbose_name = 'Банковская карта'
         verbose_name_plural = 'Банковские карты'
+
+    def __str__(self):
+        return self.card_number
