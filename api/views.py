@@ -88,11 +88,6 @@ class SubscriptionViewSet(
     queryset = Subscription.objects.all()
     http_method_names = ('get', 'post', 'patch')
 
-    def get_queryset(self):
-        if self.action in ('retrieve',):
-            return Subscription.objects.all()
-        return UserSubscription.objects.all()
-
     def get_serializer_class(self):
         if self.action in ('retrieve',):
             return SubscriptionReadSerializer

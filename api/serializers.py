@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django.db.models import Exists, Max, Min, OuterRef, Sum
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
@@ -17,7 +18,8 @@ from subscriptions.models import (
     ANNUAL,
     LENGTH_LIMIT_PHONE_NUMBER_FIELD,
     MONTH,
-    SEMI_ANNUAL
+    SEMI_ANNUAL,
+    SUBSCRIPTION_PERIOD
 )
 
 ADDITION_SUBSCRIPTION_DAYS = {
@@ -36,6 +38,7 @@ SMS_TEXT = (
 PAY2U_PHONE_NUMBER = '+70123456789'
 SUBSCRIPTION_EXIST_ERROR = {'error': 'Вы уже подписаные на один из тарифов'}
 INSUFFICIENT_FUNDS = {'error': 'Недостаточно средств на счете'}
+NO_DATA_TRANSFERED = {'error': 'Данные не переданы'}
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -226,20 +229,34 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
 
 
 class SubscriptionWriteSerializer(serializers.ModelSerializer):
-    subscription_id = serializers.PrimaryKeyRelatedField(
-        queryset=Subscription.objects.all(), source='subscription.id')
-    autorenewal = serializers.BooleanField(write_only=True, required=False)
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Subscription.objects.all(),
+        required=False
+    )
+    autorenewal = serializers.BooleanField(required=False)
+    period = serializers.ChoiceField(
+        required=False, choices=SUBSCRIPTION_PERIOD)
 
     class Meta:
-        model = UserSubscription
+        model = Subscription
         fields = (
-            'subscription_id',
+            'id',
             'period',
             'autorenewal'
         )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.context.get('request') and self.context[
+            'request'
+        ].method == 'POST':
+            for field in ('id', 'period'):
+                self.fields[field].required = True
+
     def validate(self, data):
-        subscription = data['subscription']['id']
+        if not data:
+            raise serializers.ValidationError(NO_DATA_TRANSFERED)
+        subscription = data.get('id', self.instance)
         if (self.context.get('request').method == 'POST'
             and UserSubscription.objects.filter(
             Exists(
@@ -257,7 +274,7 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         period = validated_data['period']
         user = self.context.get('request').user
-        subscription = validated_data['subscription']['id']
+        subscription = validated_data['id']
         period_accordance = {
             MONTH: subscription.monthly_price,
             SEMI_ANNUAL: subscription.semi_annual_price,
@@ -290,8 +307,14 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             promocode=promocode
         )
 
-    def update(self, usersubscription, validated_data):
-        period = validated_data['period']
+    def update(self, subscription, validated_data):
+        usersubscription = get_object_or_404(
+            UserSubscription,
+            subscription=subscription,
+            user=self.context.get('request').user)
+        period = validated_data.get('period', usersubscription.period)
+        autorenewal = validated_data.get(
+            'autorenewal', usersubscription.autorenewal)
         if usersubscription.period != period:
             period_accordance = {
                 MONTH: usersubscription.subscription.monthly_price,
@@ -300,7 +323,9 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             }
             usersubscription.period = period
             usersubscription.price = period_accordance[period]
-            usersubscription.save()
+        if usersubscription.autorenewal != autorenewal:
+            usersubscription.autorenewal = autorenewal
+        usersubscription.save()
         return usersubscription
 
     def to_representation(self, subscription):
