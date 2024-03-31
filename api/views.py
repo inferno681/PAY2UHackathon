@@ -2,12 +2,14 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.views import APIView
 
 from .filters import CoverFilter
+from .functions import pdf_receipt_generator
 from .serializers import (
     CategorySerializer,
     CoverRetrieveSerializer,
@@ -72,14 +74,6 @@ class UserView(APIView):
 
     @extend_schema(tags=['Users'])
     def get(self, request):
-        from sms import send_sms
-
-        send_sms(
-            'Here is the message',
-            '+12065550100',
-            ['+41792926112'],
-            fail_silently=False
-        )
         return Response(UserSerializer(request.user).data)
 
 
@@ -103,3 +97,17 @@ class SubscriptionViewSet(
         if self.action in ('retrieve',):
             return SubscriptionReadSerializer
         return SubscriptionWriteSerializer
+
+    @action(methods=['get'], detail=True)
+    def action(self, request, pk=None):
+        usersubscription = get_object_or_404(
+            UserSubscription, subscription_id=pk, user=request.user)
+
+        return pdf_receipt_generator(
+            id=usersubscription.id,
+            phone_number=request.user.phone_number,
+            name=usersubscription.subscription.name,
+            end_date=usersubscription.end_date,
+            promocode=usersubscription.promocode,
+            price=usersubscription.price
+        )

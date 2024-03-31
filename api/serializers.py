@@ -26,6 +26,14 @@ ADDITION_SUBSCRIPTION_DAYS = {
     ANNUAL: 365
 }
 
+SMS_TEXT = (
+    'Вам оформлена подписка: '
+    'Название: {name} '
+    'Цена: {price} '
+    'Описание: {description:.50} '
+    'Промокод: {promocode}'
+)
+PAY2U_PHONE_NUMBER = '+70123456789'
 SUBSCRIPTION_EXIST_ERROR = {'error': 'Вы уже подписаные на один из тарифов'}
 INSUFFICIENT_FUNDS = {'error': 'Недостаточно средств на счете'}
 
@@ -253,15 +261,12 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
         user.save()
         promocode = promocode_generator()
         send_sms(
-            (
-                'Вам оформлена подписка: '
-                f'Название: {subscription.name} '
-                f'Цена: {period_accordance[period]} '
-                f'Описание: {subscription.description} '
-                f'Промокод: {promocode}'
-
-            ),
-            'PAY2U_phone_number',
+            (SMS_TEXT.format(
+                name=subscription.name,
+                price=period_accordance[period],
+                description=subscription.description,
+                promocode=promocode)),
+            PAY2U_PHONE_NUMBER,
             ['+7' + user.phone_number],
             fail_silently=False
         )
