@@ -184,6 +184,7 @@ class UserSerializer(serializers.ModelSerializer):
             'current_month_expenses'
         )
 
+    @extend_schema_field(OpenApiTypes.DECIMAL)
     def get_current_month_expenses(self, user):
         return user.transactions.filter(
             timestamp__month=timezone.now().month,
