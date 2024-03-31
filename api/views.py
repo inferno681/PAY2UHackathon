@@ -99,7 +99,7 @@ class SubscriptionViewSet(
         return SubscriptionWriteSerializer
 
     @action(methods=['get'], detail=True)
-    def action(self, request, pk=None):
+    def get_reciept(self, request, pk=None):
         usersubscription = get_object_or_404(
             UserSubscription, subscription_id=pk, user=request.user)
 

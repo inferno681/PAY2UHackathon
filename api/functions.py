@@ -6,7 +6,13 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 
-from subscriptions.models import UserSubscription, PROMOCODE_LENGHT
+from subscriptions.models import (
+    Transaction,
+    UserSubscription,
+    DONE,
+    PROMOCODE_LENGHT,
+    UNDONE
+)
 
 PROMOCODE_SYMBOLS = string.ascii_uppercase + string.digits
 
@@ -45,3 +51,21 @@ def pdf_receipt_generator(id, phone_number, name, end_date, promocode, price):
     page.showPage()
     page.save()
     return response
+
+
+def payment(user, subscription, amount):
+    status = UNDONE if user.account_balance < amount else DONE
+    Transaction.objects.create(
+        user=user,
+        subscription=subscription,
+        amount=amount,
+        status=status
+    )
+    user.account_balance -= amount
+    user.save()
+    return True if status == DONE else False
+
+
+def cashback_calculation(user, amount, cashback_percent):
+    user.cashback += amount * (cashback_percent / 100)
+    user.save()
