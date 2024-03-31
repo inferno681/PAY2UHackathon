@@ -1,11 +1,10 @@
 import random
 import string
 
+from django.http import HttpResponse
 from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.pagesizes import A5
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 
 from subscriptions.models import UserSubscription, PROMOCODE_LENGHT
 
@@ -21,28 +20,28 @@ def promocode_generator():
     return promocode
 
 
-def pdf_receipt_generator(phone_number, name, end_date, promocode, price):
-
+def pdf_receipt_generator(id, phone_number, name, end_date, promocode, price):
+    drawing_data = (
+        f'Номер телефона: {phone_number}',
+        f'Название: {name}',
+        f'Действует до: {end_date}',
+        f'Цена: {price}',
+        f'Промокод: {promocode}'
+    )
     pdfmetrics.registerFont(
         TTFont('timesnewromanpsmt', 'timesnewromanpsmt.ttf',))
-    styles = getSampleStyleSheet()
-    heading = styles['Title']
-    heading.fontName = 'timesnewromanpsmt'
-    heading.fontSize = 14
-    body = styles['BodyText']
-    body.fontName = 'timesnewromanpsmt'
-    body.fontSize = 12
-    heading_text = ('PAY2U <br/>'
-                    'Подписка оформлена<br/><br/>')
-    body_text = (
-        f'Номер телефона: {phone_number} <br/><br/>'
-        f'Название: {name} <br/><br/>'
-        f'Действует до: {end_date} <br/><br/>'
-        f'Промокод: {promocode} <br/><br/>'
-        f'Цена: {price}'
-    )
-    heading_para = Paragraph(heading_text, heading)
-    body_para = Paragraph(body_text, body)
-    elements = [heading_para, body_para]
-    doc = SimpleDocTemplate('simple_pdf.pdf', pagesize=A5)
-    doc.build(elements)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = ('attachment; '
+                                       f'filename="Reciept#{id}.pdf"')
+    page = canvas.Canvas(response)
+    page.setFont('timesnewromanpsmt', size=16)
+    page.drawString(250, 800, 'PAY2U')
+    page.drawString(200, 750, 'Подписка оформлена')
+    page.setFont('timesnewromanpsmt', size=14)
+    height = 725
+    for i in drawing_data:
+        page.drawString(75, height, i)
+        height -= 25
+    page.showPage()
+    page.save()
+    return response
