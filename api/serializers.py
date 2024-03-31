@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from django.db.models import Exists, Max, Min, OuterRef
+from django.db.models import Exists, Max, Min, OuterRef, Sum
 from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
@@ -169,6 +169,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     subscriptions = UserSubscriptionSerializer(
         many=True, source='usersubscriptions')
+    current_month_expenses = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -180,7 +181,22 @@ class UserSerializer(serializers.ModelSerializer):
             'account_balance',
             'cashback',
             'subscriptions',
+            'current_month_expenses'
         )
+
+    def get_current_month_expenses(self, user):
+        user.usersubscriptions.filter(
+            end_date__month=timezone.now().month,
+            end_date__lte=timezone.now().date()
+        ).aggregate(sum_value=Sum('price'))
+        user.usersubscriptions.filter(
+            period=MONTH,
+            end_date__gt=timezone.now().date()
+        ).aggregate(sum_value=Sum('price'))
+        return user.usersubscriptions.filter(
+            end_date__month=timezone.now().month,
+            end_date__gte=timezone.now().date()
+        ).aggregate(expenses=Sum('price'))['expenses']
 
 
 class SubscriptionReadSerializer(SubscriptionSerializer):
@@ -215,14 +231,14 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
 
 
 class SubscriptionWriteSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(
+    subscription_id = serializers.PrimaryKeyRelatedField(
         queryset=Subscription.objects.all(), source='subscription.id')
     autorenewal = serializers.BooleanField(write_only=True, required=False)
 
     class Meta:
         model = UserSubscription
         fields = (
-            'id',
+            'subscription_id',
             'period',
             'autorenewal'
         )
