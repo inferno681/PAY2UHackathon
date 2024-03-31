@@ -18,12 +18,19 @@ PROMOCODE_ERROR_MESSAGE = 'Промокод содержит недопусти�
 MONTH = 'monthly'
 SEMI_ANNUAL = 'semi-annual'
 ANNUAL = 'annual'
+DONE = 'done'
+UNDONE = 'undone'
 
 SUBSCRIPTION_PERIOD = (
     (MONTH, 'Месяц'),
     (SEMI_ANNUAL, 'Полгода'),
     (ANNUAL, 'Год')
 )
+
+TRANSACTION_STATUS = {
+    (DONE, 'Выполнена'),
+    (UNDONE, 'Не выполнена'),
+}
 
 USER = (
     'Номер телефона: {phone_number}. '
@@ -181,6 +188,11 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         verbose_name='Обложка',
     )
+    users = models.ManyToManyField(
+        User,
+        through='Transaction',
+        verbose_name='Пользователи'
+    )
 
     class Meta:
         ordering = ('name',)
@@ -213,8 +225,8 @@ class UserSubscription(models.Model):
     )
     start_date = models.DateField(
         'Дата начала подписки',
-        auto_now=True,
-        auto_now_add=False
+        auto_now=False,
+        auto_now_add=True
     )
     end_date = models.DateField(
         'Дата окончания подписки',
@@ -277,3 +289,36 @@ class Card(models.Model):
 
     def __str__(self):
         return self.card_number
+
+
+class Transaction(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name='transactions',
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь'
+    )
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.CASCADE,
+        related_name='transactions',
+        verbose_name='Подписка'
+    )
+    amount = models.DecimalField(
+        'Сумма',
+        max_digits=LENGTH_LIMITS_PRICE_FIELDS,
+        decimal_places=DECIMAL_PLACES,
+        default=0.00,
+        validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
+    )
+    timestamp = models.DateTimeField(auto_now=True,)
+    status = models.CharField(
+        'Статус транзакции',
+        max_length=max(len(status) for status, _ in TRANSACTION_STATUS),
+        default=UNDONE,
+        choices=TRANSACTION_STATUS)
+
+    class Meta:
+        ordering = ('timestamp',)
+        verbose_name = 'Транзакция'
+        verbose_name_plural = 'Транзакции'

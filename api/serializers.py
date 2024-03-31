@@ -7,7 +7,7 @@ from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
 from sms import send_sms
 
-from .functions import promocode_generator
+from .functions import cashback_calculation, payment, promocode_generator
 from subscriptions.models import (
     Category,
     Cover,
@@ -185,18 +185,12 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_current_month_expenses(self, user):
-        user.usersubscriptions.filter(
-            end_date__month=timezone.now().month,
-            end_date__lte=timezone.now().date()
-        ).aggregate(sum_value=Sum('price'))
-        user.usersubscriptions.filter(
-            period=MONTH,
-            end_date__gt=timezone.now().date()
-        ).aggregate(sum_value=Sum('price'))
-        return user.usersubscriptions.filter(
-            end_date__month=timezone.now().month,
-            end_date__gte=timezone.now().date()
-        ).aggregate(expenses=Sum('price'))['expenses']
+        return user.transactions.filter(
+            timestamp__month=timezone.now().month,
+            timestamp__year=timezone.now().year
+        ).aggregate(
+            current_month_expenses=Sum('amount')
+        )['current_month_expenses']
 
 
 class SubscriptionReadSerializer(SubscriptionSerializer):
@@ -268,13 +262,10 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             SEMI_ANNUAL: subscription.semi_annual_price,
             ANNUAL: subscription.annual_price
         }
-        if user.account_balance <= period_accordance[period]:
+        price = period_accordance[period]
+        if not payment(user, subscription, price):
             raise serializers.ValidationError(INSUFFICIENT_FUNDS)
-        user.account_balance -= period_accordance[period]
-        user.cashback += period_accordance[period] * (
-            subscription.cashback_percent / 100
-        )
-        user.save()
+        cashback_calculation(user, price, subscription.cashback_percent)
         promocode = promocode_generator()
         send_sms(
             (SMS_TEXT.format(
@@ -292,7 +283,7 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
                 days=ADDITION_SUBSCRIPTION_DAYS[period]
             )),
             period=period,
-            price=period_accordance[period],
+            price=price,
             user=user,
             subscription=subscription,
             promocode=promocode
