@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'subscriptions',
     'api',
     'django_celery_results',
+    'django_celery_beat',
 ]
 
 AUTH_USER_MODEL = 'subscriptions.User'
@@ -192,3 +193,4 @@ CACHES = {
 
 CELERY_CACHE_BACKEND = 'django-cache'
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'

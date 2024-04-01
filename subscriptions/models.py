@@ -54,7 +54,7 @@ SUBSCRIPTION = (
 class User(AbstractUser):
     """Модель пользователя."""
     USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ['username']
     phone_number = models.CharField(
         'Номер телефона',
         max_length=LENGTH_LIMIT_PHONE_NUMBER_FIELD,
@@ -78,12 +78,14 @@ class User(AbstractUser):
         'Счет',
         max_digits=LENGTH_LIMIT_ACCOUNT_FIELD,
         decimal_places=DECIMAL_PLACES,
+        default=0,
         validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),)
     )
     cashback = models.DecimalField(
         'Кэшбек',
         max_digits=LENGTH_LIMITS_PRICE_FIELDS,
         decimal_places=DECIMAL_PLACES,
+        default=0,
         validators=(MinValueValidator(MIN_VALUE_DECIMAL_FIELDS),),
     )
 
