@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'subscriptions',
     'api',
+    'django_celery_results',
 ]
 
 AUTH_USER_MODEL = 'subscriptions.User'
@@ -178,3 +179,16 @@ SMS_FILE_PATH = BASE_DIR / 'sms'
 
 if os.getenv('CSRF_TRUSTED_ORIGINS'):
     CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
+
+CELERY_BROKER_URL = "redis://127.0.0.1:16379/0"
+CELERY_RESULT_BACKEND = 'django-db'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:16379/1',
+    }
+}
+
+CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
