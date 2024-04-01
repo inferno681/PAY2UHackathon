@@ -1,6 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -77,7 +77,10 @@ class UserView(APIView):
         return Response(UserSerializer(request.user).data)
 
 
-@extend_schema(tags=['Subscriptions'])
+@extend_schema(
+    tags=['Subscriptions'],
+    responses={200: SubscriptionReadSerializer}
+)
 class SubscriptionViewSet(
     mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
@@ -93,11 +96,18 @@ class SubscriptionViewSet(
             return SubscriptionReadSerializer
         return SubscriptionWriteSerializer
 
+    @extend_schema(
+        description='Get the receipt for the subscription',
+        responses={
+            200: OpenApiResponse(
+                description='Receipt for the subscription',
+            )
+        }
+    )
     @action(methods=['get'], detail=True)
     def get_reciept(self, request, pk=None):
         usersubscription = get_object_or_404(
             UserSubscription, subscription_id=pk, user=request.user)
-
         return pdf_receipt_generator(
             id=usersubscription.id,
             phone_number=request.user.phone_number,
