@@ -55,11 +55,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://pay2-you-ra2w.vercel.app',
-]
+CORS_ORIGIN_WHITELIST = os.getenv('CORS_ORIGIN_WHITELIST', '').split(',')
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -167,8 +163,8 @@ SIMPLE_JWT = {
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'PAY2UHackathon',
-    'DESCRIPTION': 'Сервис управления подписками',
+    'TITLE': os.getenv('DOCS_TITLE', 'PAY2UHackathon'),
+    'DESCRIPTION': os.getenv('DOCS_DESCRIPTION', 'Сервис управления подписками'),
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
     'SWAGGER_UI_SETTINGS': {
@@ -181,16 +177,17 @@ SMS_FILE_PATH = BASE_DIR / 'sms'
 if os.getenv('CSRF_TRUSTED_ORIGINS'):
     CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(',')
 
-CELERY_BROKER_URL = 'redis://127.0.0.1:16379/0'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://127.0.0.1:16379/0')
 CELERY_RESULT_BACKEND = 'django-db'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:16379/1',
+        'BACKEND': os.getenv('CACHES_BACKEND', 'django.core.cache.backends.redis.RedisCache'),
+        'LOCATION': os.getenv('CACHES_LOCATION', 'redis://127.0.0.1:16379/1'),
     }
 }
 
-CELERY_CACHE_BACKEND = 'django-cache'
+CELERY_CACHE_BACKEND = os.getenv('CELERY_CACHE_BACKEND', 'django-cache')
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BEAT_SCHEDULER = os.getenv(
+    'CELERY_BEAT_SCHEDULER', 'django_celery_beat.schedulers:DatabaseScheduler')
