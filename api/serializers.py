@@ -6,7 +6,6 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
-from sms import send_sms
 
 from .functions import cashback_calculation, payment, promocode_generator
 from subscriptions.models import (
@@ -21,6 +20,7 @@ from subscriptions.models import (
     SEMI_ANNUAL,
     SUBSCRIPTION_PERIOD
 )
+from .tasks import send_sms_task
 
 ADDITION_SUBSCRIPTION_DAYS = {
     MONTH: 30,
@@ -285,15 +285,14 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(INSUFFICIENT_FUNDS)
         cashback_calculation(user, price, subscription.cashback_percent)
         promocode = promocode_generator()
-        send_sms(
+        send_sms_task(
             (SMS_TEXT.format(
                 name=subscription.name,
                 price=period_accordance[period],
                 description=subscription.description,
                 promocode=promocode)),
             PAY2U_PHONE_NUMBER,
-            ['+7' + user.phone_number],
-            fail_silently=False
+            user.phone_number,
         )
         return UserSubscription.objects.create(
             start_date=timezone.now().date(),
