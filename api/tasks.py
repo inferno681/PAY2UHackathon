@@ -5,12 +5,14 @@ from django.utils import timezone
 from sms import send_sms
 
 from api.functions import cashback_calculation, payment
-from api.serializers import ADDITION_SUBSCRIPTION_DAYS, INSUFFICIENT_FUNDS
+from api.constants import (
+    ADDITION_SUBSCRIPTION_DAYS,
+    AUTOPAYMENT_REPORT,
+    CASHBACK_CREDIT_REPORT,
+    INSUFFICIENT_FUNDS,
+    SEND_SMS_REPORT
+)
 from subscriptions.models import User, UserSubscription
-
-AUTOPAYMENT_REPORT = 'Prolongations for {count} clients done'
-CASHBACK_CREDIT_REPORT = 'Cashback crediting for {count} clients done'
-SEND_SMS_REPORT = 'Sent to {country_code}{recipient}'
 
 
 @shared_task

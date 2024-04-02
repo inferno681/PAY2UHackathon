@@ -1,20 +1,20 @@
 import random
-import string
 
 from django.http import HttpResponse
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
 
-from subscriptions.models import (
-    Transaction,
-    UserSubscription,
+from .constants import PROMOCODE_SYMBOLS
+from subscriptions import (
     DONE,
     PROMOCODE_LENGHT,
     UNDONE
 )
-
-PROMOCODE_SYMBOLS = string.ascii_uppercase + string.digits
+from subscriptions.models import (
+    Transaction,
+    UserSubscription,
+)
 
 
 def promocode_generator():

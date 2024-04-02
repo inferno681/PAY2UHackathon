@@ -1,53 +1,26 @@
-from decimal import Decimal
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
-
-LENGTH_LIMITS_CHAR_FIELDS = 150
-LENGTH_LIMITS_PRICE_FIELDS = 7
-LENGTH_LIMIT_ACCOUNT_FIELD = 10
-LENGTH_LIMIT_PHONE_NUMBER_FIELD = 10
-LENGTH_LIMITS_LINK_FIELDS = 200
-DECIMAL_PLACES = 2
-MIN_VALUE_DECIMAL_FIELDS = Decimal.from_float(0.0)
-PROMOCODE_LENGHT = 13
-PROMOCODE_ERROR_MESSAGE = 'Промокод содержит недопустимые символы'
-
-MONTH = 'monthly'
-SEMI_ANNUAL = 'semi-annual'
-ANNUAL = 'annual'
-DONE = 'done'
-UNDONE = 'undone'
-
-SUBSCRIPTION_PERIOD = (
-    (MONTH, 'Месяц'),
-    (SEMI_ANNUAL, 'Полгода'),
-    (ANNUAL, 'Год')
-)
-
-TRANSACTION_STATUS = {
-    (DONE, 'Выполнена'),
-    (UNDONE, 'Не выполнена'),
-}
-
-USER = (
-    'Номер телефона: {phone_number}. '
-    'Баланс: {account_balance}. '
-    'Кэшбек: {cashback}.'
-)
-
-COVER = (
-    'Название: {name:.15}. '
-    'Описание: {preview:.30}.'
-)
-SUBSCRIPTION = (
-    'Название: {name:.15}. '
-    'Описание: {description:.30}. '
-    'Цена за месяц: {monthly_price}. '
-    'Цена за полгода: {semi_annual_price}. '
-    'Цена за год: {annual_price}.'
+from .constants import (
+    LENGTH_LIMITS_CHAR_FIELDS,
+    LENGTH_LIMITS_PRICE_FIELDS,
+    LENGTH_LIMIT_ACCOUNT_FIELD,
+    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
+    LENGTH_LIMITS_LINK_FIELDS,
+    DECIMAL_PLACES,
+    MIN_VALUE_DECIMAL_FIELDS,
+    PROMOCODE_LENGHT,
+    PROMOCODE_ERROR_MESSAGE,
+    MONTH,
+    UNDONE,
+    SUBSCRIPTION_PERIOD,
+    TRANSACTION_STATUS,
+    USER,
+    COVER,
+    SUBSCRIPTION,
+    USER_SUBSCRIPTION,
+    TRANSACTION
 )
 
 
@@ -270,6 +243,17 @@ class UserSubscription(models.Model):
             name='unique_user_subscription'
         )]
 
+    def __str__(self):
+        return USER_SUBSCRIPTION.format(
+            user=self.user.phone_number,
+            subscription=self.subscription.name,
+            start_date=self.start_date,
+            end_date=self.end_date,
+            price=self.price,
+            period=self.period,
+            autorenewal=self.autorenewal
+        )
+
 
 class Card(models.Model):
     user = models.ForeignKey(
@@ -324,3 +308,12 @@ class Transaction(models.Model):
         ordering = ('timestamp',)
         verbose_name = 'Транзакция'
         verbose_name_plural = 'Транзакции'
+
+    def __str__(self):
+        return TRANSACTION.format(
+            user=self.user.phone_number,
+            subscription=self.subscription.name,
+            amount=self.amount,
+            timestamp=self.timestamp,
+            status=self.status
+        )
