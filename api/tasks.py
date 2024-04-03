@@ -60,4 +60,7 @@ def send_sms_task(text, sender, recipient, country_code='+7'):
         [country_code + recipient],
         fail_silently=False
     )
-    return SEND_SMS_REPORT(country_code=country_code, recipient=recipient)
+    return SEND_SMS_REPORT.format(
+        country_code=country_code,
+        recipient=recipient
+    )
