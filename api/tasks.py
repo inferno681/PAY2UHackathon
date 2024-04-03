@@ -43,7 +43,7 @@ def autopayment():
 def cashback_credit():
     count = 0
     for user in User.objects.all():
-        if user.usersubscription.start_date.first() == timezone.now().date():
+        if user.usersubscriptions.first().start_date == timezone.now().date():
             user.account_balance += user.cashback
             user.cashback = 0
             user.save()
