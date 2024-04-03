@@ -54,15 +54,18 @@ def pdf_receipt_generator(id, phone_number, name, end_date, promocode, price):
 
 
 def payment(user, subscription, amount):
-    status = UNDONE if user.account_balance < amount else DONE
+    if user.account_balance < amount:
+        status = UNDONE
+    else:
+        status = DONE
+        user.account_balance -= amount
+        user.save()
     Transaction.objects.create(
         user=user,
         subscription=subscription,
         amount=amount,
         status=status
     )
-    user.account_balance -= amount
-    user.save()
     return True if status == DONE else False
 
 
