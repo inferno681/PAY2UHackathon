@@ -1,3 +1,19 @@
+from .tasks import send_sms_task
+from subscriptions import (
+    ANNUAL,
+    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
+    MONTH,
+    SEMI_ANNUAL,
+    SUBSCRIPTION_PERIOD
+)
+from subscriptions.models import (
+    Category,
+    Cover,
+    Subscription,
+    User,
+    UserSubscription,
+)
+from .functions import cashback_calculation, payment, promocode_generator
 from datetime import timedelta
 
 from django.db.models import Exists, Max, Min, OuterRef, Sum
@@ -6,39 +22,16 @@ from django.utils import timezone
 from drf_spectacular.utils import extend_schema_field
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import serializers
-from sms import send_sms
 
-from .functions import cashback_calculation, payment, promocode_generator
-from subscriptions.models import (
-    Category,
-    Cover,
-    Subscription,
-    User,
-    UserSubscription,
-    ANNUAL,
-    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
-    MONTH,
-    SEMI_ANNUAL,
-    SUBSCRIPTION_PERIOD
+from .constants import (
+    ADDITION_SUBSCRIPTION_DAYS,
+    INSUFFICIENT_FUNDS,
+    NO_DATA_TRANSFERED,
+    PAY2U_PHONE_NUMBER,
+    SMS_TEXT,
+    SUBSCRIPTION_EXIST_ERROR
+
 )
-
-ADDITION_SUBSCRIPTION_DAYS = {
-    MONTH: 30,
-    SEMI_ANNUAL: 180,
-    ANNUAL: 365
-}
-
-SMS_TEXT = (
-    'Вам оформлена подписка: '
-    'Название: {name} '
-    'Цена: {price} '
-    'Описание: {description:.50} '
-    'Промокод: {promocode}'
-)
-PAY2U_PHONE_NUMBER = '+70123456789'
-SUBSCRIPTION_EXIST_ERROR = {'error': 'Вы уже подписаные на один из тарифов'}
-INSUFFICIENT_FUNDS = {'error': 'Недостаточно средств на счете'}
-NO_DATA_TRANSFERED = {'error': 'Данные не переданы'}
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -285,15 +278,14 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(INSUFFICIENT_FUNDS)
         cashback_calculation(user, price, subscription.cashback_percent)
         promocode = promocode_generator()
-        send_sms(
+        send_sms_task(
             (SMS_TEXT.format(
                 name=subscription.name,
                 price=period_accordance[period],
                 description=subscription.description,
                 promocode=promocode)),
             PAY2U_PHONE_NUMBER,
-            ['+7' + user.phone_number],
-            fail_silently=False
+            user.phone_number,
         )
         return UserSubscription.objects.create(
             start_date=timezone.now().date(),
