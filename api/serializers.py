@@ -278,7 +278,7 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(INSUFFICIENT_FUNDS)
         cashback_calculation(user, price, subscription.cashback_percent)
         promocode = promocode_generator()
-        send_sms_task(
+        send_sms_task.delay(
             (SMS_TEXT.format(
                 name=subscription.name,
                 price=period_accordance[period],

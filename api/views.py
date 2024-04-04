@@ -46,11 +46,7 @@ class GetTokenView(APIView):
 
 
 @extend_schema(tags=['Categories'])
-class CategoryViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
-):
+class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = None

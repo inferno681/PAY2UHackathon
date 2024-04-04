@@ -201,7 +201,8 @@ class UserSubscription(models.Model):
     start_date = models.DateField(
         'Дата начала подписки',
         auto_now=False,
-        auto_now_add=True
+        auto_now_add=True,
+        editable=True
     )
     end_date = models.DateField(
         'Дата окончания подписки',
