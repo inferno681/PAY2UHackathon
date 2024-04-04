@@ -1,6 +1,7 @@
 from .tasks import send_sms_task
 from subscriptions import (
     ANNUAL,
+    DONE,
     LENGTH_LIMIT_PHONE_NUMBER_FIELD,
     MONTH,
     SEMI_ANNUAL,
@@ -184,7 +185,8 @@ class UserSerializer(serializers.ModelSerializer):
     def get_current_month_expenses(self, user):
         return user.transactions.filter(
             timestamp__month=timezone.now().month,
-            timestamp__year=timezone.now().year
+            timestamp__year=timezone.now().year,
+            status=DONE
         ).aggregate(
             current_month_expenses=Sum('amount')
         )['current_month_expenses']
