@@ -1,6 +1,7 @@
 from .tasks import send_sms_task
 from subscriptions import (
     ANNUAL,
+    DONE,
     LENGTH_LIMIT_PHONE_NUMBER_FIELD,
     MONTH,
     SEMI_ANNUAL,
@@ -184,7 +185,8 @@ class UserSerializer(serializers.ModelSerializer):
     def get_current_month_expenses(self, user):
         return user.transactions.filter(
             timestamp__month=timezone.now().month,
-            timestamp__year=timezone.now().year
+            timestamp__year=timezone.now().year,
+            status=DONE
         ).aggregate(
             current_month_expenses=Sum('amount')
         )['current_month_expenses']
@@ -214,6 +216,9 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         allow_null=True,
         read_only=True,
         source='usersubscriptions.first.promocode'
+    )
+    cover_name = serializers.StringRelatedField(
+        read_only=True, source='cover.name'
     )
 
     class Meta:
@@ -278,7 +283,7 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(INSUFFICIENT_FUNDS)
         cashback_calculation(user, price, subscription.cashback_percent)
         promocode = promocode_generator()
-        send_sms_task(
+        send_sms_task.delay(
             (SMS_TEXT.format(
                 name=subscription.name,
                 price=period_accordance[period],

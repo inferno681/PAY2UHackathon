@@ -3,6 +3,7 @@ from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
 from .constants import (
+    LENGTH_LIMIT_DESCRIPTION_FIELD,
     LENGTH_LIMITS_CHAR_FIELDS,
     LENGTH_LIMITS_PRICE_FIELDS,
     LENGTH_LIMIT_ACCOUNT_FIELD,
@@ -126,7 +127,10 @@ class Subscription(models.Model):
         'Название',
         max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
-    description = models.TextField('Описание')
+    description = models.CharField(
+        'Описание',
+        max_length=LENGTH_LIMIT_DESCRIPTION_FIELD
+    )
 
     monthly_price = models.DecimalField(
         'Цена подписки за месяц',
@@ -201,7 +205,8 @@ class UserSubscription(models.Model):
     start_date = models.DateField(
         'Дата начала подписки',
         auto_now=False,
-        auto_now_add=True
+        auto_now_add=True,
+        editable=True
     )
     end_date = models.DateField(
         'Дата окончания подписки',
