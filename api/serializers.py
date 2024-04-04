@@ -215,6 +215,9 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         read_only=True,
         source='usersubscriptions.first.promocode'
     )
+    cover_name = serializers.StringRelatedField(
+        read_only=True, source='cover.name'
+    )
 
     class Meta:
         model = Subscription
