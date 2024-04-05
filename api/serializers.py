@@ -96,14 +96,18 @@ class CoverSerializer(serializers.ModelSerializer):
 
 class SubscriptionSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
-    end_date = serializers.DateField(
-        allow_null=True,
-        source='usersubscriptions.first.end_date'
-    )
+    end_date = serializers.SerializerMethodField()
 
     class Meta:
         model = Subscription
         exclude = ('users',)
+
+    @extend_schema_field(OpenApiTypes.DATE)
+    def get_end_date(self, obj):
+        usersubscription = obj.usersubscriptions.filter(
+            user=self.context.get('request').user
+        ).first()
+        return str(usersubscription.end_date) if usersubscription else None
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_is_subscribed(self, obj):
@@ -203,21 +207,9 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         many=True,
         source='cover.categories'
     )
-    period = serializers.StringRelatedField(
-        allow_null=True,
-        read_only=True,
-        source='usersubscriptions.first.period'
-    )
-    autorenewal = serializers.BooleanField(
-        allow_null=True,
-        read_only=True,
-        source='usersubscriptions.first.autorenewal'
-    )
-    promocode = serializers.StringRelatedField(
-        allow_null=True,
-        read_only=True,
-        source='usersubscriptions.first.promocode'
-    )
+    period = serializers.SerializerMethodField()
+    autorenewal = serializers.SerializerMethodField()
+    promocode = serializers.SerializerMethodField()
     cover_name = serializers.StringRelatedField(
         read_only=True, source='cover.name'
     )
@@ -225,6 +217,26 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
     class Meta:
         model = Subscription
         exclude = (*SubscriptionSerializer.Meta.exclude,)
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_period(self, obj):
+        usersubscription = obj.usersubscriptions.filter(
+            user=self.context.get('request').user
+        ).first()
+        return usersubscription.period if usersubscription else None
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_autorenewal(self, obj):
+        usersubscription = obj.usersubscriptions.filter(
+            user=self.context.get('request').user
+        ).first()
+        return usersubscription.autorenewal if usersubscription else None
+
+    def get_promocode(self, obj):
+        usersubscription = obj.usersubscriptions.filter(
+            user=self.context.get('request').user
+        ).first()
+        return usersubscription.promocode if usersubscription else None
 
 
 class SubscriptionWriteSerializer(serializers.ModelSerializer):
@@ -323,6 +335,36 @@ class SubscriptionWriteSerializer(serializers.ModelSerializer):
             usersubscription.price = period_accordance[period]
         if usersubscription.autorenewal != autorenewal:
             usersubscription.autorenewal = autorenewal
+
+        if usersubscription.end_date < timezone.now().date(
+        ) and validated_data.get('autorenewal') is True:
+            user = self.context.get('request').user
+            period_accordance = {
+                MONTH: subscription.monthly_price,
+                SEMI_ANNUAL: subscription.semi_annual_price,
+                ANNUAL: subscription.annual_price
+            }
+            price = period_accordance[period]
+            if not payment(user, subscription, price):
+                raise serializers.ValidationError(INSUFFICIENT_FUNDS)
+            cashback_calculation(user, price, subscription.cashback_percent)
+            promocode = promocode_generator()
+            send_sms_task.delay(
+                (SMS_TEXT.format(
+                    name=subscription.name,
+                    price=period_accordance[period],
+                    description=subscription.description,
+                    promocode=promocode)),
+                PAY2U_PHONE_NUMBER,
+                user.phone_number,
+            )
+            usersubscription.start_date = timezone.now().date()
+            usersubscription.price = price
+            usersubscription.end_date = (timezone.now().date() + timedelta(
+                days=ADDITION_SUBSCRIPTION_DAYS[period]
+            ))
+            usersubscription.promocode = promocode
+
         usersubscription.save()
         return usersubscription
 
