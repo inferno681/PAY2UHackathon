@@ -89,6 +89,7 @@ MY_RESULT = {
             'categories': [
                 1
             ],
+            'autorenewal': True,
             'promocode': 'promocode1',
             'is_active': True
         },
@@ -102,6 +103,7 @@ MY_RESULT = {
             'logo_link': 'logo_link',
             'categories': [
             ],
+            'autorenewal': True,
             'promocode': 'promocode2',
             'is_active': False
         }

@@ -4,6 +4,7 @@ from django.db import models
 
 from .constants import (
     LENGTH_LIMIT_DESCRIPTION_FIELD,
+    LENGTH_LIMIT_PREVIEW_FIELD,
     LENGTH_LIMITS_CHAR_FIELDS,
     LENGTH_LIMITS_PRICE_FIELDS,
     LENGTH_LIMIT_ACCOUNT_FIELD,
@@ -98,7 +99,10 @@ class Cover(models.Model):
         'Название',
         max_length=LENGTH_LIMITS_CHAR_FIELDS
     )
-    preview = models.TextField('Краткое описание')
+    preview = models.CharField(
+        'Краткое описание',
+        max_length=LENGTH_LIMIT_PREVIEW_FIELD
+    )
     logo_link = models.CharField(
         'Ссылка на логотип',
         max_length=LENGTH_LIMITS_LINK_FIELDS,
