@@ -15,6 +15,11 @@ services:
     image: redis:latest
     restart: always
 
+  frontend:
+    image: lopakadude/pay2u
+    volumes:
+      - ./frontend/:/app/result_build/
+
   backend:
     image: inferno681/pay2u_hackathon:latest
     env_file: .env
@@ -32,8 +37,10 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - static_volume:/static
       - ./media:/usr/share/nginx/html/media
+      - ./frontend/dist:/usr/share/nginx/html/
     depends_on:
       - backend
+      - frontend
 
   celery_worker:
     image: inferno681/pay2u_hackathon:latest

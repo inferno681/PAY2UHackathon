@@ -154,6 +154,7 @@ class UserSubscriptionSerializer(serializers.ModelSerializer):
             'period',
             'logo_link',
             'categories',
+            'autorenewal',
             'promocode',
             'is_active',
         )
