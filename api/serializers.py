@@ -1,20 +1,3 @@
-from .tasks import send_sms_task
-from subscriptions import (
-    ANNUAL,
-    DONE,
-    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
-    MONTH,
-    SEMI_ANNUAL,
-    SUBSCRIPTION_PERIOD
-)
-from subscriptions.models import (
-    Category,
-    Cover,
-    Subscription,
-    User,
-    UserSubscription,
-)
-from .functions import cashback_calculation, payment, promocode_generator
 from datetime import timedelta
 
 from django.db.models import Exists, Max, Min, OuterRef, Sum
@@ -33,6 +16,23 @@ from .constants import (
     SUBSCRIPTION_EXIST_ERROR
 
 )
+from .tasks import send_sms_task
+from subscriptions import (
+    ANNUAL,
+    DONE,
+    LENGTH_LIMIT_PHONE_NUMBER_FIELD,
+    MONTH,
+    SEMI_ANNUAL,
+    SUBSCRIPTION_PERIOD
+)
+from subscriptions.models import (
+    Category,
+    Cover,
+    Subscription,
+    User,
+    UserSubscription,
+)
+from .functions import cashback_calculation, payment, promocode_generator
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -73,17 +73,17 @@ class CoverSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.DECIMAL)
     def get_price(self, obj):
-        return min(obj.subscriptions.aggregate(
+        return str(min(obj.subscriptions.aggregate(
             min_monthly_price=Min('monthly_price'),
             min_semi_annual_price=Min('semi_annual_price'),
             min_annual_price=Min('annual_price')
-        ).values())
+        ).values()))
 
     @extend_schema_field(OpenApiTypes.DECIMAL)
     def get_cashback_percent(self, obj):
-        return obj.subscriptions.aggregate(
+        return str(obj.subscriptions.aggregate(
             Max('cashback_percent')
-        ).get('cashback_percent__max')
+        ).get('cashback_percent__max'))
 
     @extend_schema_field(OpenApiTypes.BOOL)
     def get_is_subscribed(self, obj):
