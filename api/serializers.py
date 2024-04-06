@@ -232,6 +232,7 @@ class SubscriptionReadSerializer(SubscriptionSerializer):
         ).first()
         return usersubscription.autorenewal if usersubscription else None
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_promocode(self, obj):
         usersubscription = obj.usersubscriptions.filter(
             user=self.context.get('request').user
