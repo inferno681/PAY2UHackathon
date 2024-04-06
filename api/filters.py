@@ -4,7 +4,7 @@ from subscriptions.models import Category, Cover
 
 
 class CoverFilter(FilterSet):
-    name = filters.CharFilter(lookup_expr='startswith')
+    name = filters.CharFilter(lookup_expr='istartswith')
     categories = filters.ModelMultipleChoiceFilter(
         field_name='categories__name',
         to_field_name='name',
