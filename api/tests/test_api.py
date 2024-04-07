@@ -16,6 +16,7 @@ from subscriptions.models import (
 )
 User = get_user_model()
 
+"""Адреса"""
 CATEGORY_LIST_NAME = 'category-list'
 CATEGORY_DETAIL_NAME = 'category-detail'
 COVER_LIST_NAME = 'cover-list'
@@ -24,6 +25,8 @@ USER_NAME = 'my'
 SUBSCRIPTION_CREATE_NAME = 'subscription-list'
 SUBSCRIPTION_DETAIL_NAME = 'subscription-detail'
 SUBSCRIPTION_GET_REPORT_NAME = 'subscription-get-reciept'
+
+"""Запросы"""
 SUBSCRIPTION_CREATE_DATA = {
     'id': 3,
     'period': MONTH,
@@ -33,6 +36,8 @@ SUBSCRIPTION_UPDATE_DATA = {
     'period': MONTH,
     'autorenewal': True
 }
+
+"""Ответы"""
 COVER_LIST_RESULT = {
     'count': 3,
     'next': None,

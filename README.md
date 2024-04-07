@@ -14,6 +14,8 @@
 
 Документация к API доступна по url-адресу [PAY2U/SWAGER](https://pay2u.ddns.net/api/schema/swagger-ui/)
 
+Ссылка на zip-архив с некоторыми скриншотами [zip](https://disk.yandex.com/d/XuA1afVjpgfZ1Q)
+
 <details><summary><h1>Сервис для управления подписками</h1></summary>
 
 * **MVP:**
@@ -134,6 +136,7 @@ pip install -r requirements.txt
 
 - [Python](https://www.python.org/downloads/release/python-3122/)
 - [Django](https://www.djangoproject.com/)
+- [Django REST framework](https://www.django-rest-framework.org/)
 - [PostgreSQL](https://www.postgresql.org/)
 - [Docker](https://www.docker.com/)
 - [Celery](https://docs.celeryq.dev/en/stable/)

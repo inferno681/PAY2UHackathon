@@ -14,6 +14,7 @@ PROMOCODE_LENGHT = 13
 
 """Сообщения об ошибках"""
 PROMOCODE_ERROR_MESSAGE = 'Промокод содержит недопустимые символы'
+PHONE_NUMBER_ERROR_MESSAGE = 'Недопустимые символы в номере телефона'
 
 """Наполнение полей с выбором"""
 MONTH = 'monthly'

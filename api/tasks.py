@@ -17,10 +17,11 @@ from subscriptions.models import User, UserSubscription
 
 @shared_task
 def autopayment():
+    """Функция автоматческого продления подписок(планировшик)"""
     count = 0
-    for usersubscription in UserSubscription.objects.all():
-        if usersubscription.end_date == timezone.now().date(
-        ) and usersubscription.autorenewal:
+    for usersubscription in UserSubscription.objects.filter(
+            timezone.now().date()).all():
+        if usersubscription.autorenewal:
             if not payment(
                 usersubscription.user,
                 usersubscription.subscription,
@@ -41,6 +42,7 @@ def autopayment():
 
 @shared_task
 def cashback_credit():
+    """Функция перевода средств из кэшбэка на счет(планировшик)"""
     count = 0
     for user in User.objects.all():
         if user.usersubscriptions.first().start_date == timezone.now().date():
@@ -54,6 +56,7 @@ def cashback_credit():
 
 @shared_task
 def send_sms_task(text, sender, recipient, country_code='+7'):
+    """Функция отправки смс(очередь задач)"""
     send_sms(
         text,
         sender,
