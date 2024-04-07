@@ -1,5 +1,5 @@
-from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema, OpenApiResponse
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -15,15 +15,15 @@ from .serializers import (
     CoverRetrieveSerializer,
     CoverSerializer,
     GetTokenSerializer,
-    UserSerializer,
     SubscriptionReadSerializer,
-    SubscriptionWriteSerializer
+    SubscriptionWriteSerializer,
+    UserSerializer
 )
 from subscriptions.models import (
     Category,
     Cover,
-    User,
     Subscription,
+    User,
     UserSubscription
 )
 

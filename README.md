@@ -14,6 +14,8 @@
 
 Документация к API доступна по url-адресу [PAY2U/SWAGER](https://pay2u.ddns.net/api/schema/swagger-ui/)
 
+Ссылка на zip-архив с некоторыми скриншотами [zip](https://disk.yandex.com/d/XuA1afVjpgfZ1Q)
+
 <details><summary><h1>Сервис для управления подписками</h1></summary>
 
 * **MVP:**

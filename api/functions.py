@@ -2,8 +2,9 @@ import random
 
 from django.http import HttpResponse
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfgen import canvas
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.pdfgen import canvas
+
 
 from .constants import PROMOCODE_SYMBOLS
 from subscriptions import (
@@ -18,6 +19,7 @@ from subscriptions.models import (
 
 
 def promocode_generator():
+    """Генератор промокода"""
     while (True):
         promocode = ''.join(random.choices(PROMOCODE_SYMBOLS,
                                            k=PROMOCODE_LENGHT))
@@ -27,6 +29,7 @@ def promocode_generator():
 
 
 def pdf_receipt_generator(id, phone_number, name, end_date, promocode, price):
+    """Генератор чека в PDF"""
     drawing_data = (
         f'Номер телефона: {phone_number}',
         f'Название: {name}',
@@ -54,6 +57,7 @@ def pdf_receipt_generator(id, phone_number, name, end_date, promocode, price):
 
 
 def payment(user, subscription, amount):
+    """Функция проведения платежа"""
     if user.account_balance < amount:
         status = UNDONE
     else:
@@ -70,5 +74,6 @@ def payment(user, subscription, amount):
 
 
 def cashback_calculation(user, amount, cashback_percent):
+    """Фнукция начисления кэшбека"""
     user.cashback += amount * (cashback_percent / 100)
     user.save()
