@@ -134,6 +134,7 @@ pip install -r requirements.txt
 
 - [Python](https://www.python.org/downloads/release/python-3122/)
 - [Django](https://www.djangoproject.com/)
+- [Django REST framework](https://www.django-rest-framework.org/)
 - [PostgreSQL](https://www.postgresql.org/)
 - [Docker](https://www.docker.com/)
 - [Celery](https://docs.celeryq.dev/en/stable/)

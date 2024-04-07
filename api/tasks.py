@@ -18,9 +18,9 @@ from subscriptions.models import User, UserSubscription
 @shared_task
 def autopayment():
     count = 0
-    for usersubscription in UserSubscription.objects.all():
-        if usersubscription.end_date == timezone.now().date(
-        ) and usersubscription.autorenewal:
+    for usersubscription in UserSubscription.objects.filter(
+            timezone.now().date()).all():
+        if usersubscription.autorenewal:
             if not payment(
                 usersubscription.user,
                 usersubscription.subscription,

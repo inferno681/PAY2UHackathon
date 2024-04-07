@@ -12,6 +12,7 @@ from .constants import (
     LENGTH_LIMITS_LINK_FIELDS,
     DECIMAL_PLACES,
     MIN_VALUE_DECIMAL_FIELDS,
+    PHONE_NUMBER_ERROR_MESSAGE,
     PROMOCODE_LENGHT,
     PROMOCODE_ERROR_MESSAGE,
     MONTH,
@@ -33,6 +34,9 @@ class User(AbstractUser):
     phone_number = models.CharField(
         'Номер телефона',
         max_length=LENGTH_LIMIT_PHONE_NUMBER_FIELD,
+        validators=(RegexValidator(
+            regex='^[0-9]+$', message=PHONE_NUMBER_ERROR_MESSAGE
+        ),),
         unique=True,
         blank=False,
     )
